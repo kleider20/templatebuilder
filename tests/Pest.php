@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +49,18 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Crea un usuario con rol 'admin' (rol de prueba que posee todos los permisos)
+ * y siembra el RBAC necesario para que la autorización no falle.
+ */
+function templateAdminUser(): User
+{
+    (new RolePermissionSeeder)->run();
+
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    return $user;
 }

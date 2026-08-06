@@ -1,16 +1,18 @@
 <?php
 
-namespace App\Services\Templates;
+namespace App\Data\Templates;
+
+use Spatie\LaravelData\Data;
 
 /**
- * DTO inmutable de un manifiesto de tema (template.json) validado.
+ * Data object (spatie/laravel-data) de un manifiesto de tema (template.json) validado.
  */
-final readonly class TemplateManifestDto
+class TemplateManifestData extends Data
 {
     /**
-     * @param  array<int, string>  $types  superficies declaradas
+     * @param  array<int, string>  $types
      * @param  string  $home  home del tema relativo a layouts/ (ej: landing/templates/aurora)
-     * @param  array<string, array<string, TemplateComponentDto>>  $components  superficie => [rol => DTO]
+     * @param  array<string, array<string, string>>  $components  superficie => [rol => path]
      * @param  array<string, mixed>|null  $theme
      * @param  array<string, mixed>  $settings
      * @param  array<string, mixed>  $dependencies
@@ -35,19 +37,23 @@ final readonly class TemplateManifestDto
     ) {}
 
     /**
+     * Construye el Data object desde el array crudo del manifiesto.
+     *
      * @param  array<string, mixed>  $m
      * @param  array<string, array<int, string>>  $vocabulary
      */
-    public static function fromArray(array $m, array $vocabulary): self
+    public static function fromManifest(array $m, array $vocabulary): self
     {
         $components = [];
+
         foreach ($m['components'] ?? [] as $surface => $roles) {
             if (! is_array($roles)) {
                 continue;
             }
+
             foreach ($roles as $role => $path) {
                 if (in_array($role, $vocabulary[$surface] ?? [], true) && is_string($path)) {
-                    $components[$surface][$role] = new TemplateComponentDto($role, $path);
+                    $components[$surface][$role] = $path;
                 }
             }
         }
@@ -77,14 +83,6 @@ final readonly class TemplateManifestDto
      */
     public function toManifestArray(): array
     {
-        $components = [];
-
-        foreach ($this->components as $surface => $roles) {
-            foreach ($roles as $role => $dto) {
-                $components[$surface][$role] = $dto->path;
-            }
-        }
-
         return [
             'name' => $this->name,
             'slug' => $this->slug,
@@ -94,7 +92,7 @@ final readonly class TemplateManifestDto
             'description' => $this->description,
             'thumbnail' => $this->thumbnail,
             'home' => $this->home,
-            'components' => $components,
+            'components' => $this->components,
             'theme' => $this->theme,
             'settings' => $this->settings,
             'dependencies' => $this->dependencies,

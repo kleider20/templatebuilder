@@ -2,8 +2,6 @@ import { Head } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import PreviewSurface from '@/components/template-preview-surface';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type {
@@ -91,8 +89,10 @@ export default function Preview({ slug, manifest, surfaces }: PreviewProps) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
     }, [selection]);
 
-    const palette = paletteById(manifest, selection.palette);
-    const roles = manifest.theme?.roles ?? ['primary', 'secondary', 'accent', 'background', 'surface', 'text'];
+    const roles = useMemo(
+        () => manifest.theme?.roles ?? ['primary', 'secondary', 'accent', 'background', 'surface', 'text'],
+        [manifest],
+    );
     const editableRoles = (manifest.theme?.roles ?? []).filter((r) =>
         ['primary', 'secondary', 'accent'].includes(r),
     );
@@ -125,7 +125,6 @@ export default function Preview({ slug, manifest, surfaces }: PreviewProps) {
         return Object.fromEntries(Object.entries(colors).map(([k, v]) => [`--tpl-${k}`, v]));
     }, [manifest, selection, isDark, roles]);
 
-    const surfaceLabel = surface;
     const settingsEntry = Object.entries(settingsSchema) as [string, TemplateSettingSchema][];
 
     return (

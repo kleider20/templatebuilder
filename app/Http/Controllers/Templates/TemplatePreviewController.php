@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Templates;
 
+use App\Data\Templates\TemplatePreviewData;
+use App\Http\Controllers\Controller;
+use App\Models\Template;
 use App\Services\Templates\TemplateManifestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,12 +24,16 @@ class TemplatePreviewController extends Controller
 
     /**
      * GET /templates/{slug}/preview
-     *
-     * Página de preview multi-superficie con selector, dark/light y GUI tema.
      */
-    public function show(string $slug): Response
+    public function show(Request $request, string $slug): Response
     {
-        $manifest = $this->manifests->loadBySlug($slug);
+        $this->authorize('view', $this->templateFor($slug));
+
+        try {
+            $manifest = $this->manifests->loadBySlug($slug);
+        } catch (RuntimeException) {
+            abort(404);
+        }
 
         return Inertia::render('templates/preview', [
             'slug' => $slug,
@@ -37,16 +44,15 @@ class TemplatePreviewController extends Controller
 
     /**
      * POST /templates/{slug}/preview
-     *
-     * Devuelve los datos que necesita el preview y el panel de personalización.
-     * Valida que la selección de paleta del autor exista en el manifiesto.
      */
     public function data(Request $request, string $slug): JsonResponse
     {
+        $this->authorize('view', $this->templateFor($slug));
+
         try {
             $manifest = $this->manifests->loadBySlug($slug);
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 404);
+        } catch (RuntimeException) {
+            return response()->json(['message' => 'Tema no encontrado.'], 404);
         }
 
         $paletteIds = [];
@@ -59,12 +65,19 @@ class TemplatePreviewController extends Controller
             'palette' => ['nullable', 'string', Rule::in($paletteIds)],
         ]);
 
-        return response()->json([
-            'manifest' => $manifest->toManifestArray(),
-            'surfaces' => $manifest->types,
-            'defaultPalette' => $manifest->theme['default'] ?? config('templates.fallback_palette.id'),
-            'paletteIds' => $paletteIds,
-            'palette' => $validated['palette'] ?? null,
-        ]);
+        $preview = new TemplatePreviewData(
+            manifest: $manifest->toManifestArray(),
+            surfaces: $manifest->types,
+            defaultPalette: $manifest->theme['default'] ?? config('templates.fallback_palette.id'),
+            paletteIds: $paletteIds,
+            palette: $validated['palette'] ?? null,
+        );
+
+        return response()->json($preview->toArray());
+    }
+
+    protected function templateFor(string $slug): Template
+    {
+        return Template::firstOrNew(['slug' => $slug]);
     }
 }

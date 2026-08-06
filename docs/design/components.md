@@ -67,7 +67,7 @@ Exportaciones en su mayoría **default**, salvo wrappers multi-componente (`AppC
 
 ### Template builder
 - `manifest-editor.tsx` — Editor del manifiesto (modal JSON, `settings`/`theme`), guarda vía `templates.manifest.update`.
-- `template-preview-surface.tsx` — Superficie de render del preview (multi-superficie), emite `tpl:settings-changed`.
+- `template-preview-surface.tsx` — Superficie de render del preview (multi-superficie), emite `tpl:settings-changed`. Carga el bundle `dist/{slug}.js` remoto con URL absoluta de `window.location.origin` (funciona en dev) e inyecta el `<link>` al CSS del tema `dist/{slug}.css` (`manifest.exports.styles`), del cual dependen las utilidades del tema (`bg-primary`, `bg-surface`, `--tpl-*`).
 
 ## Convenciones
 

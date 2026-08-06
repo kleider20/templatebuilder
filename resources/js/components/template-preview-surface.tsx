@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState, useEffect, Component } from 'react';
+import { lazy, Suspense, useMemo, useEffect, useState, Component } from 'react';
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -18,12 +18,6 @@ export default function PreviewSurface({
     surface,
     settings,
 }: PreviewSurfaceProps) {
-    const [reloadKey, setReloadKey] = useState(0);
-
-    useEffect(() => {
-        setReloadKey((k) => k + 1);
-    }, [surface]);
-
     useEffect(() => {
         if (typeof window !== 'undefined') {
             window.__TPL_SETTINGS__ = settings;
@@ -33,22 +27,28 @@ export default function PreviewSurface({
 
     return (
         <Suspense fallback={<PreviewLoading />}>
-            <DynamicTemplate
-                key={`${surface}-${reloadKey}`}
-                slug={slug}
-                surface={surface}
-            />
+            <DynamicTemplate key={surface} slug={slug} surface={surface} />
         </Suspense>
     );
 }
 
 function DynamicTemplate({ slug, surface }: { slug: string; surface: string }) {
-    const ComponentRef = useMemo(() => {
-        const cacheBust = import.meta.env.DEV ? `?t=${Date.now()}` : '';
-        const moduleUrl = `/templates/${slug}/dist/${slug}.js${cacheBust}`;
+    const [cacheBust] = useState(() => (import.meta.env.DEV ? `?t=${Date.now()}` : ''));
 
-        return lazy(() =>
-            import(/* @vite-ignore */ moduleUrl).then((mod) => {
+    const cssUrl = useMemo(
+        () => `${window.location.origin}/templates/${slug}/dist/${slug}.css${cacheBust}`,
+        [slug, cacheBust],
+    );
+
+    // `lazy()` debe crearse por slug/surface; como el módulo remoto es dinámico
+    // no puede declararse a nivel de módulo. El moduleUrl usa origen absoluto
+    // para funcionar en dev (donde el módulo corre desde el Vite dev server pero
+    // los bundles de temas viven en resources/js/layouts y los sirve Laravel).
+    const ComponentRef = useMemo(() => {
+        const moduleUrl = `${window.location.origin}/templates/${slug}/dist/${slug}.js${cacheBust}`;
+
+        return lazy(() => {
+            return import(/* @vite-ignore */ `${moduleUrl}`).then((mod) => {
                 const map = mod.components ?? mod.default;
                 const role = surface === 'auth' ? 'login' : 'template';
                 const comp = map?.[surface]?.[role] ?? map?.[surface]?.template;
@@ -62,11 +62,17 @@ function DynamicTemplate({ slug, surface }: { slug: string; surface: string }) {
                     : () => <PreviewEmpty surface={surface} />;
 
                 return { default: Wrapped };
-            }),
-        );
-    }, [slug, surface]);
+            });
+        });
+    }, [slug, surface, cacheBust]);
 
-    return <ComponentRef />;
+    return (
+        <>
+            <link rel="stylesheet" href={cssUrl} />
+            {/* eslint-disable-next-line react-hooks/static-components -- componente remoto dinámico */}
+            <ComponentRef />
+        </>
+    );
 }
 
 function ErrorBoundaryHOC({ children, surface }: { children: React.ReactNode; surface: string }) {

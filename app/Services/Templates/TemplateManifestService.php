@@ -2,6 +2,7 @@
 
 namespace App\Services\Templates;
 
+use App\Data\Templates\TemplateManifestData;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 
@@ -39,7 +40,7 @@ class TemplateManifestService
     /**
      * Lista de DTOs de manifiesto válidos encontrados en el árbol.
      *
-     * @return array<int, TemplateManifestDto>
+     * @return array<int, TemplateManifestData>
      */
     public function scan(): array
     {
@@ -75,7 +76,7 @@ class TemplateManifestService
      *
      * @throws RuntimeException
      */
-    public function loadFromPath(string $manifestPath): TemplateManifestDto
+    public function loadFromPath(string $manifestPath): TemplateManifestData
     {
         $manifest = json_decode(File::get($manifestPath), true);
 
@@ -91,7 +92,7 @@ class TemplateManifestService
      *
      * @throws RuntimeException si no existe o es inválido.
      */
-    public function loadBySlug(string $slug): TemplateManifestDto
+    public function loadBySlug(string $slug): TemplateManifestData
     {
         $manifestPath = $this->findManifestPath($slug);
 
@@ -136,7 +137,7 @@ class TemplateManifestService
      *
      * @throws RuntimeException
      */
-    public function validate(array $manifest, ?string $manifestPath = null): TemplateManifestDto
+    public function validate(array $manifest, ?string $manifestPath = null): TemplateManifestData
     {
         $name = $manifest['name'] ?? null;
         $slug = $manifest['slug'] ?? null;
@@ -232,7 +233,7 @@ class TemplateManifestService
             $this->validateTheme($manifest['theme']);
         }
 
-        return TemplateManifestDto::fromArray($manifest, $this->vocabulary());
+        return TemplateManifestData::fromManifest($manifest, $this->vocabulary());
     }
 
     /**

@@ -45,6 +45,7 @@
 | **Template builder**: superficies, temas default, manifiestos, export/paridad, builder | [`templates/README.md`](./templates/README.md) + [`config/templates.php`](../config/templates.php) |
 | Vista general / estructura global | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 | Skills / nuevas capacidades del agente | [`../AGENTS.md`](../AGENTS.md) |
+| Lint JS / ESLint (config, ignores, scripts bin) | [`eslint.config.js`](../eslint.config.js) + [`architecture/frontend.md`](./architecture/frontend.md) |
 
 ## Reglas de cumplimiento
 

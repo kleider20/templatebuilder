@@ -28,4 +28,13 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    // Externalizar React: el import map de app.blade.php lo resuelve a la única
+    // instancia compartida con los temas (public/vendor/react/index.js). Así el
+    // bundle de la app y los temas usan la MISMA copia de React (evita "Invalid
+    // hook call" en el preview de temas).
+    build: {
+        rollupOptions: {
+            external: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom', 'react-dom/client'],
+        },
+    },
 });

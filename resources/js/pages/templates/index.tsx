@@ -27,6 +27,8 @@ const surfaceLabels: Record<string, string> = {
 type TemplatesPageProps = {
     templates: TemplateCatalogItem[];
     surfaces: string[];
+    canCreate: boolean;
+    canViewAll: boolean;
 };
 
 function ThumbnailUpload({ slug }: { slug: string }) {
@@ -74,7 +76,7 @@ function ThumbnailUpload({ slug }: { slug: string }) {
     );
 }
 
-export default function Templates({ templates, surfaces }: TemplatesPageProps) {
+export default function Templates({ templates, canCreate }: TemplatesPageProps) {
     return (
         <>
             <Head title="Plantillas" />
@@ -90,9 +92,11 @@ export default function Templates({ templates, surfaces }: TemplatesPageProps) {
                         </p>
                     </div>
 
-                    <Link href={create()}>
-                        <Button>Crear plantilla</Button>
-                    </Link>
+                    {canCreate && (
+                        <Link href={create()}>
+                            <Button>Crear plantilla</Button>
+                        </Link>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">

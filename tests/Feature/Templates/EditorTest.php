@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Services\Templates\TemplateScaffoldService;
 use Illuminate\Support\Facades\File;
 
@@ -22,7 +21,7 @@ function editorBase(): string
 test('editor index lista el árbol del tema', function () {
     app(TemplateScaffoldService::class)->make(slug: 'aurora', types: ['landing', 'dashboard'], name: 'Aurora');
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $response = $this->actingAs($user)->get(route('templates.editor', 'aurora').'?path=landing/templates/aurora/aurora-template.tsx');
 
@@ -36,7 +35,7 @@ test('editor index lista el árbol del tema', function () {
 test('updateFile guarda el contenido de un archivo válido', function () {
     app(TemplateScaffoldService::class)->make(slug: 'aurora', types: ['landing'], name: 'Aurora');
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
     $path = 'landing/templates/aurora/aurora-layout.tsx';
 
     $response = $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
@@ -51,7 +50,7 @@ test('updateFile guarda el contenido de un archivo válido', function () {
 test('updateFile rechaza path con ..', function () {
     app(TemplateScaffoldService::class)->make(slug: 'aurora', types: ['landing'], name: 'Aurora');
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
         'path' => 'landing/templates/aurora/../../secret.txt',
@@ -62,7 +61,7 @@ test('updateFile rechaza path con ..', function () {
 test('updateFile rechaza rutas fuera del tema', function () {
     app(TemplateScaffoldService::class)->make(slug: 'aurora', types: ['landing'], name: 'Aurora');
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
         'path' => 'dashboard/templates/other/file.tsx',
@@ -73,7 +72,7 @@ test('updateFile rechaza rutas fuera del tema', function () {
 test('updateFile rechaza extensiones fuera de allowlist', function () {
     app(TemplateScaffoldService::class)->make(slug: 'aurora', types: ['landing'], name: 'Aurora');
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
         'path' => 'landing/templates/aurora/aurora.evil',

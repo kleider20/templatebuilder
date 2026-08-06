@@ -19,31 +19,28 @@ Laravel 13 registra rutas por grupos (`routes/web.php`, `routes/settings.php`, `
 
 ## Template builder (`routes/templates.php`)
 
-Archivo propio del dominio del builder. Las rutas de gestión se registran **antes** que la ruta de paridad para que `{slug}/{dir}/{file}` no las capture.
+Archivo propio del dominio del builder. Las rutas de gestión se registran **antes** que la ruta de paridad para que `{slug}/{dir}/{file}` no las capture. Todo el grupo de gestión usa middleware `auth` + `verified` y autorización por `TemplatePolicy` (permisos `view_templates`, `manage_templates`, etc.).
 
-### Catálogo público (sin auth)
+### Gestión (middleware `auth, verified`, prefijo `templates`)
 
 | Método | URI | Handler | Nombre |
 |--------|-----|---------|--------|
 | GET | `/templates` | `TemplateController@index` | `templates.index` |
-| GET | `/templates/{slug}/preview` | `TemplatePreviewController@show` | `templates.preview.show` |
-
-### Gestión (middleware `auth`, prefijo `templates`)
-
-| Método | URI | Handler | Nombre |
-|--------|-----|---------|--------|
 | GET | `/templates/create` | `TemplateController@create` | `templates.create` |
 | POST | `/templates` | `TemplateController@store` | `templates.store` |
 | GET | `/templates/versions` | `TemplateExportController@index` | `templates.versions.index` |
 | GET | `/templates/versions/{version}/download` | `TemplateExportController@download` | `templates.versions.download` |
 | GET | `/templates/{slug}/editor` | `TemplateEditorController@show` | `templates.editor` |
 | PUT | `/templates/{slug}/editor` | `TemplateEditorController@update` | `templates.editor.update` |
-| PUT | `/templates/{slug}/manifest` | `TemplateManifestEditorController@update` | `templates.manifest.update` |
+| PUT | `/templates/{slug}/manifest` | `TemplateEditorController@updateManifest` | `templates.manifest.update` |
 | POST | `/templates/{slug}/thumbnail` | `TemplateEditorController@uploadThumbnail` | `templates.thumbnail.update` |
+| GET | `/templates/{slug}/preview` | `TemplatePreviewController@show` | `templates.preview.show` |
 | POST | `/templates/{slug}/preview` | `TemplatePreviewController@data` | `templates.preview` |
 | POST | `/templates/{slug}/export` | `TemplateExportController@store` | `templates.export` |
 
-### Paridad de URLs (canónicas, idénticas a proyectos finales)
+> `TemplateManifestEditorController` se fusionó dentro de `TemplateEditorController@updateManifest`.
+
+### Paridad de URLs (públicas, canónicas, idénticas a proyectos finales)
 
 | Método | URI | Handler | Nombre | Constraint |
 |--------|-----|---------|--------|------------|

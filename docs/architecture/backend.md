@@ -7,84 +7,153 @@ Capa de servidor de la aplicación. Incluye el scaffold de autenticación (start
 ```
 app/
 ├── Actions/
-│   └── Fortify/
-│       ├── CreateNewUser.php          # Contrato CreatesNewUsers (Fortify)
-│       └── ResetUserPassword.php      # Contrato ResetsUserPasswords (Fortify)
+│   ├── Fortify/
+│   │   ├── CreateNewUser.php          # Contrato CreatesNewUsers (Fortify) + rol 'user'
+│   │   ├── ResetUserPassword.php      # Contrato ResetsUserPasswords (Fortify)
+│   │   ├── UpdateUserProfileInformation.php  # Contrato UpdatesUserProfileInformation
+│   │   └── UpdateUserPassword.php     # Contrato UpdatesUserPasswords (Fortify)
+│   ├── Templates/
+│   │   ├── CatalogTemplatesAction.php   # catálogo con scope propios/"ver todos" + canCreate/canViewAll
+│   │   ├── CreateTemplateAction.php     # scaffold + registro Template (dueño)
+│   │   ├── BuildEditorTreeAction.php    # árbol del editor desde manifiesto
+│   │   ├── ResolveTemplateFileAction.php# resolución segura de rutas (anti path traversal)
+│   │   ├── ReadTemplateFileAction.php    # lee archivo del tema
+│   │   ├── SaveTemplateFileAction.php    # guarda archivo validado en allowlist
+│   │   ├── UpdateManifestAction.php      # actualiza settings/theme del manifiesto
+│   │   ├── UploadThumbnailAction.php     # sube preview → {home}/thumbnails/...
+│   │   └── ExportTemplateAction.php      # export con bump de versión + TemplateVersion
+│   └── Settings/
+│       ├── UpdateProfileAction.php    # PATCH de perfil
+│       ├── DeleteProfileAction.php    # borra cuenta (inborrables: is_undeletable)
+│       └── UpdatePasswordAction.php   # PUT de contraseña
 ├── Concerns/
 │   ├── PasswordValidationRules.php    # Traits: passwordRules()/currentPasswordRules()
 │   └── ProfileValidationRules.php     # Traits: profileRules()/nameRules()/emailRules()
 ├── Console/
 │   └── Commands/
-│       └── TemplateMakeCommand.php    # Scaffold de un tema bajo layouts/{superficie}/{slug}
+│       ├── TemplateMakeCommand.php    # Scaffold de un tema bajo layouts/{superficie}/{slug}
+│       └── UserPromoteCommand.php     # `user:promote` — asigna rol super_admin
+├── Data/
+│   ├── Templates/
+│   │   ├── TemplateManifestData.php   # (spatie/laravel-data) fromManifest/toManifestArray
+│   │   ├── TemplateSummaryData.php    # item del catálogo
+│   │   ├── TemplateVersionData.php
+│   │   ├── TemplateTreeNodeData.php
+│   │   ├── TemplateFileData.php
+│   │   └── TemplatePreviewData.php
+│   └── Settings/
+│       ├── ProfileData.php
+│       ├── SecurityData.php
+│       └── AppearanceData.php
 ├── Http/
 │   ├── Controllers/
-│   │   ├── Controller.php             # Base abstracta
-│   │   ├── TemplateController.php     # catálogo + create + store
-│   │   ├── TemplateEditorController.php  # editor: show/update archivos + árbol
-│   │   ├── TemplateExportController.php  # export: index/store/download versions
-│   │   ├── TemplateManifestEditorController.php  # update de manifiesto
-│   │   ├── TemplatePreviewController.php  # preview: show + data (paleta validada)
-│   │   ├── TemplateViewController.php # paridad: show (dist/assets) + asset
+│   │   ├── Controller.php             # Base abstracta + AuthorizesRequests
+│   │   ├── Templates/
+│   │   │   ├── TemplateController.php     # index/create/store
+│   │   │   ├── TemplateEditorController.php  # show/update + updateManifest + uploadThumbnail
+│   │   │   ├── TemplateExportController.php  # index/store/download versions
+│   │   │   ├── TemplatePreviewController.php  # show + data (paleta validada)
+│   │   │   └── TemplateViewController.php # paridad: show + asset
 │   │   └── Settings/
 │   │       ├── ProfileController.php  # edit / update / destroy
 │   │       └── SecurityController.php # edit / update (password)
 │   ├── Middleware/
 │   │   ├── HandleAppearance.php
-│   │   └── HandleInertiaRequests.php
+│   │   └── HandleInertiaRequests.php  # comparte roles + permissions en Inertia
 │   └── Requests/
-│       └── Settings/
-│           ├── PasswordUpdateRequest.php
-│           ├── ProfileDeleteRequest.php
-│           ├── ProfileUpdateRequest.php
-│           └── TwoFactorAuthenticationRequest.php
+│       ├── Settings/
+│       │   ├── PasswordUpdateRequest.php
+│       │   ├── ProfileDeleteRequest.php
+│       │   ├── ProfileUpdateRequest.php
+│       │   └── TwoFactorAuthenticationRequest.php
+│       └── Templates/
+│           ├── StoreTemplateRequest.php
+│           ├── UpdateTemplateRequest.php     # content (max 200000)
+│           ├── UpdateTemplateManifestRequest.php
+│           ├── UploadThumbnailRequest.php
+│           └── ExportTemplateRequest.php
 ├── Models/
-│   ├── User.php
-│   └── TemplateVersion.php
+│   ├── User.php                  # HasRoles + relación templates() + is_test_user/is_undeletable
+│   ├── Template.php              # catálogo con slug/name/user_id + versiones
+│   ├── TemplateVersion.php
+│   ├── Role.php                  # extiende Spatie\Permission + RoleMetadata
+│   ├── Permission.php            # extiende Spatie\Permission + PermissionMetadata
+│   ├── RoleMetadata.php
+│   └── PermissionMetadata.php
+├── Policies/
+│   └── TemplatePolicy.php        # view/viewAny/create/update/export/delete/viewAll (RBAC)
 ├── Services/
 │   └── Templates/
-│       ├── TemplateManifestService.php  # parse/valida manifiestos, resuelve rutas seguras
+│       ├── TemplateManifestService.php  # parse/valida manifiestos → TemplateManifestData
 │       ├── TemplateScaffoldService.php  # crea estructura de carpetas de un tema
-│       ├── TemplateExportService.php    # genera ZIP de export + TemplateVersion
-│       ├── TemplateManifestDto.php      # DTO tipado de manifiesto
-│       └── TemplateComponentDto.php     # DTO de componente
+│       └── TemplateExportService.php    # export(ZIP, $version) + nextVersion() + TemplateVersion
 └── Providers/
-    ├── AppServiceProvider.php
+    ├── AppServiceProvider.php    # Gate::policy(Template) + Gate::before (super_admin)
     └── FortifyServiceProvider.php
 ```
 
-> Los directorios ausentes del patrón "espejo" aspiracional (`app/Data`, `app/Enums`, `app/Jobs`, `app/Mail`, `app/Notifications`, `app/Observers`, `app/Policies`) siguen sin existir; la lógica de negocio del builder vive en `app/Services/Templates/`.
+> Desde el CONTRATO de arquitectura en espejo, las Autores **Actions** encapsulan la lógica, los **FormRequests** validan (nunca inline en controller), los **Data objects** (`spatie/laravel-data`) transforman colecciones a Inertia y la **política RBAC** centraliza la autorización sobre templates.
 
 ## Modelos
 
 - **`app/Models/User.php`** — modelo de usuario.
   - Extiende `Illuminate\Foundation\Auth\User` e implementa `Laravel\Fortify\Contracts\PasskeyUser`.
-  - Traits: `HasFactory`, `Notifiable`, `PasskeyAuthenticatable`, `TwoFactorAuthenticatable`.
-  - Fillable: `name`, `email`, `password`.
-  - Hidden: `password`, `two_factor_secret`, `two_factor_recovery_codes`, `remember_token`.
-  - Casts: `email_verified_at` (datetime), `password` (hashed), `two_factor_confirmed_at` (datetime).
-  - **Sin relaciones** definidas en el modelo; `passkeys()` y 2FA vienen de traits de paquete.
+  - Traits: `HasFactory`, `Notifiable`, `PasskeyAuthenticatable`, `TwoFactorAuthenticatable`, y **`HasRoles`** (spatie/laravel-permission).
+  - Fillable: `name`, `email`, `password`, `is_test_user`, `is_undeletable`.
+  - Casts: `email_verified_at` (datetime), `password` (hashed), `is_test_user`/`is_undeletable` (boolean).
+  - Relación `templates()` (HasMany `Template`, `user_id`). `roles()`, `permissions()` y `getAllPermissions()` vienen de `HasRoles`.
+- **`app/Models/Template.php`** — catálogo de temas.
+  - Persiste en tabla `templates`.
+  - Columnas: `id`, `slug`, `name`, `description`, `version`, `user_id` (dueño) y timestamps.
 - **`app/Models/TemplateVersion.php`** — versión exportada de un tema.
   - Persiste en tabla `template_versions` (ver "Base de datos").
   - Columnas: `id`, `slug`, `version`, `manifest` (text), `zip_path`, `checksum`, `user_id`.
+- **`Role` / `Permission`** — extienden los modelos de spatie; cada uno con metadata (`RoleMetadata` / `PermissionMetadata`: display_name, description, category, is_critical, color, icon, level, users_count, permissions_count, is_protected, is_fallback…).
+
+## RBAC (Roles y Permisos)
+
+- Paquetes: `spatie/laravel-permission` y `spatie/laravel-data`.
+- Seeders encadenados en `DatabaseSeeder`: `RolePermissionSeeder` → `RoleMetadataSeeder` → `PermissionMetadataSeeder` → `TestSuperAdminSeeder`.
+- Roles: `super_admin`, `admin`, `editor`, `user`, `base`.
+  - `super_admin`: `Gate::before` le otorga todo (`AppServiceProvider`). Se sincroniza con **todos** los permisos.
+  - `admin`: recibe todos los permisos + los «critical» (`manage_templates`, `view_all_templates`, `manage_users`, `manage_roles`, `manage_permissions`, `manage_database`…).
+  - `editor` y `user`: permisos de lectura básica (`view_dashboard`, `view_templates`, `view_versions`).
+  - `base`: rol de «fallback» con `view_dashboard`.
+  - `user`: rol por defecto al registrarse (`CreateNewUser`).
+- Comando `user:promote {email}` → asigna rol `super_admin`.
+- `HandleInertiaRequests` comparte `roles` y `permissions` del usuario logueado.
+
+## Autorización (`TemplatePolicy`)
+
+- Registrada en `AppServiceProvider` con `Gate::policy(Template::class, TemplatePolicy::class)`.
+- Conductas clave:
+  - `viewAny` → ``view_templates``.
+  - `create` → ``create_templates``.
+  - `view`/`update`/`export`/`delete` → dueño con su permiso, **o** permiso de alcance global (`view_all_templates`, `manage_templates`, `delete_all_templates`).
+  - `viewAll` → ``view_all_templates``.
+- Los controllers usan `Template::firstOrNew(['slug' => …])` como entidad de autorización para temas del filesystem.
 
 ## Controllers
 
-- **`Settings\ProfileController`** → `edit` (GET render), `update` (PATCH fill+save), `destroy` (DELETE).
-- **`Settings\SecurityController`** → `edit` (GET render), `update` (PUT password).
-- El resto de rutas (auth) las registra Fortify automáticamente.
-- **`TemplateController`** → `index` (catálogo), `create`, `store` (crea tema vía `TemplateScaffoldService`). `thumbnailUrl()` genera la URL canónica `templates/{slug}/thumbnails/{file}` y devuelve `null` si el archivo no existe (el frontend muestra placeholder).
-- **`TemplateEditorController`** → `show` (editor + árbol de archivos), `update` (guardar archivo), `uploadThumbnail` (subir imagen preview → `{home}/thumbnails/preview.<ext>` y actualiza `thumbnail` en `template.json`). Contiene resolución segura de rutas (`resolveSafePath`) y recorrido del árbol (`tree`, `walk`, `readSafeFile`).
-- **`TemplateExportController`** → `index` (listado de versiones), `store` (genera ZIP y crea `TemplateVersion`), `download`.
-- **`TemplateManifestEditorController`** → `update` (guardar manifiesto JSON).
-- **`TemplatePreviewController`** → `show` (render preview), `data` (valida `palette` con `Rule::in` sobre las paletas del tema).
-- **`TemplateViewController`** → `show` (paridad `{slug}/{dir}/{file}`), `asset` (paridad `assets/{path}`). Sirve artefactos compilados.
+- **`Settings\ProfileController`** → `edit` (GET render vía `ProfileData`), `update` (PATCH → `UpdateProfileAction`), `destroy` (DELETE → `DeleteProfileAction`).
+- **`Settings\SecurityController`** → `edit` (GET render vía `SecurityData`), `update` (PUT → `UpdatePasswordAction`).
+- El resto de rutas (auth) de las registra Fortify automáticamente.
+- **`Templates\TemplateController`** → `index` (catálogo vía `CatalogTemplatesAction`, expone `canCreate`/`canViewAll`), `create`, `store` (→ `CreateTemplateAction`).
+- **`Templates\TemplateEditorController`** → `show` (árbol + active file vía `BuildEditorTreeAction`/`ReadTemplateFileAction`), `update` (→ `SaveTemplateFileAction`), `updateManifest` (→ `UpdateManifestAction`), `uploadThumbnail` (→ `UploadThumbnailAction`).
+- **`Templates\TemplateExportController`** → `index` (listado de versiones), `store` (→ `ExportTemplateAction` con `nextVersion()`), `download`.
+- **`Templates\TemplatePreviewController`** → `show` (render preview), `data` (valida `palette` con `Rule::in` sobre las paletas del tema).
+- **`Templates\TemplateViewController`** → `show` (paridad `{slug}/{dir}/{file}`), `asset` (paridad `assets/{path}`). Sirve artefactos compilados.
 
 ## Services (`app/Services/Templates`)
 
-- **`TemplateManifestService`** — parsea y valida los manifiestos de tema; resuelve rutas seguras (evita path traversal), devuelve DTOs.
+- **`TemplateManifestService`** — parsea y valida los manifiestos de tema; resuelve rutas seguras (evita path traversal y devuelve `TemplateManifestData`).
 - **`TemplateScaffoldService`** — crea la estructura de carpetas/archivos de un tema nuevo bajo `layouts/{superficie}/{slug}`.
-- **`TemplateExportService`** — compila (vía `bin/build-template.mjs` según el caso), empaqueta en ZIP y genera el registro `TemplateVersion`.
-- **`TemplateManifestDto` / `TemplateComponentDto`** — DTOs tipados (patrón espejo).
+- **`TemplateExportService`** — funciona con `$version` (export a versión concreta) y `nextVersion()` (bump de patch 1.0.0 → 1.0.1); empaqueta ZIP y genera el registro `TemplateVersion`.
+
+## Actions / Concerns
+
+- **Actions** del dominio de Templates y Settings (ver árbol `app/Actions/`). Son la única capa con lógica de negocio; los controllers se mantienen delgados.
+- **Concerns**: `PasswordValidationRules` y `ProfileValidationRules` (traits de validación reutilizables).
 
 ## Validación (FormRequests)
 
@@ -117,6 +186,12 @@ Migraciones en `database/migrations`:
 4. `2024_01_01_000000_create_passkeys_table` → `passkeys` (credenciales WebAuthn).
 5. `2025_08_14_170933_add_two_factor_columns_to_users_table` → columnas 2FA en `users`.
 6. `2026_08_05_000255_create_template_versions_table` → `template_versions`.
+7. `2026_08_06_192635_create_role_metadata_table` → `role_metadata`.
+8. `2026_08_06_192636_create_permission_metadata_table` → `permission_metadata`.
+9. `2026_08_06_192637_add_test_user_columns_to_users_table` → columnas `is_test_user`, `is_undeletable` en `users`.
+10. `2026_08_06_192638_create_templates_table` → `templates` (catálogo, con `slug` único y `user_id`).
+
+> Las tablas de roles/permisos (`roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions`) las crea el paquete `spatie/laravel-permission` (publicadas por su propio proveedor).
 
 ### Tabla `template_versions`
 
@@ -133,11 +208,26 @@ Migraciones en `database/migrations`:
 
 Índice único: `(slug, version)`.
 
+### Tabla `templates`
+
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| `id` | integer | PK |
+| `slug` | varchar | único |
+| `name` | varchar | título |
+| `description` | text/nullable | |
+| `version` | varchar | versión actual |
+| `user_id` | FK `users.id` | dueño del tema |
+| timestamps | datetime | |
+
 ### Factories
 - `database/factories/UserFactory.php` — estados por defecto, `unverified()`, `withTwoFactor()`.
 
 ### Seeders
-- `database/seeders/DatabaseSeeder.php` — crea un `Test User` (`test@example.com`).
+- `database/seeders/DatabaseSeeder.php` — encadena los seeders RBAC + crea `Test User`.
+- `RolePermissionSeeder` — crea roles/permisos y asignaciones (ver sección RBAC).
+- `RoleMetadataSeeder` / `PermissionMetadataSeeder` — metadata de roles/permisos.
+- `TestSuperAdminSeeder` — superadmin@templatebuilder.test y admin@templatebuilder.test.
 
 ## Tests backend (Pest)
 

@@ -11,11 +11,11 @@
  * - dist/{slug}.css : Tailwind v4 compilado sobre los TSX del tema, con el
  *                      mapeo de roles a @theme inline y variante dark.
  */
-import { build as esbuild } from 'esbuild';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build as esbuild } from 'esbuild';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -33,12 +33,15 @@ if (!slug) {
 // --- 1. Localizar el home del tema vía template.json (descubrimiento) ---
 function findManifest() {
     const surfaces = ['landing', 'dashboard', 'forms', 'auth'];
+
     for (const surface of surfaces) {
         const path = join(LAYOUTS, surface, 'templates', slug, 'template.json');
+
         if (exists(path)) {
             return { path, surface };
         }
     }
+
     return null;
 }
 
@@ -176,5 +179,6 @@ function customImportPath(themeHome, customCss) {
     const entryDir = join(ROOT, '.build');
     const target = join(themeHome, customCss);
     const rel = relative(entryDir, target).replaceAll('\\', '/');
+
     return rel.startsWith('.') ? rel : `./${rel}`;
 }

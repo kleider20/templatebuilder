@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import AppearanceToggleTab from '@/components/appearance-tabs';
 import AppLogo from '@/components/app-logo';
+import AppearanceToggleTab from '@/components/appearance-tabs';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function AuthCardLayout({

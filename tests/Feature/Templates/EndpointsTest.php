@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Services\Templates\TemplateScaffoldService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
@@ -46,7 +45,7 @@ test('endpoints de gestión exigen autenticación (401)', function () {
 test('preview con paleta inexistente devuelve 422', function () {
     endpointTheme();
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $this->actingAs($user)
         ->postJson(route('templates.preview', 'aurora'), ['palette' => 'no-existe'])
@@ -56,7 +55,7 @@ test('preview con paleta inexistente devuelve 422', function () {
 test('preview con paleta válida devuelve la selección', function () {
     endpointTheme();
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $this->actingAs($user)
         ->postJson(route('templates.preview', 'aurora'), ['palette' => 'indigo'])
@@ -67,7 +66,7 @@ test('preview con paleta válida devuelve la selección', function () {
 test('editor de manifiesto valida settings y theme contra el contrato', function () {
     endpointTheme();
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $this->actingAs($user)
         ->putJson(route('templates.manifest.update', 'aurora'), [
@@ -79,7 +78,7 @@ test('editor de manifiesto valida settings y theme contra el contrato', function
 test('subir thumbnail sin archivo devuelve 422', function () {
     endpointTheme();
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $this->actingAs($user)
         ->postJson(route('templates.thumbnail.update', 'aurora'), [])
@@ -89,7 +88,7 @@ test('subir thumbnail sin archivo devuelve 422', function () {
 test('subir thumbnail con archivo no imagen devuelve 422', function () {
     endpointTheme();
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $file = UploadedFile::fake()->create('preview.txt', 10);
 
@@ -101,7 +100,7 @@ test('subir thumbnail con archivo no imagen devuelve 422', function () {
 test('subir thumbnail guarda la imagen en thumbnails/ y actualiza template.json', function () {
     $home = endpointTheme();
 
-    $user = User::factory()->create();
+    $user = templateAdminUser();
 
     $file = UploadedFile::fake()->image('mi-preview.png', 640, 360);
 

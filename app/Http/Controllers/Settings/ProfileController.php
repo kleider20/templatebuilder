@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\Settings\DeleteProfileAction;
+use App\Actions\Settings\UpdateProfileAction;
+use App\Data\Settings\ProfileData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
@@ -11,18 +14,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        protected UpdateProfileAction $updateProfile,
+        protected DeleteProfileAction $deleteProfile,
+    ) {}
+
     /**
      * Show the user's profile settings page.
      */
     public function edit(Request $request): Response
     {
-        return Inertia::render('settings/profile', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => $request->session()->get('status'),
-        ]);
+        $data = new ProfileData(
+            mustVerifyEmail: $request->user() instanceof MustVerifyEmail,
+            status: $request->session()->get('status'),
+        );
+
+        return Inertia::render('settings/profile', $data->toArray());
     }
 
     /**
@@ -30,13 +41,7 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
+        $this->updateProfile->handle($request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 
@@ -50,9 +55,15 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        Auth::logout();
+        try {
+            $this->deleteProfile->handle($user);
+        } catch (RuntimeException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
 
-        $user->delete();
+            return back();
+        }
+
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

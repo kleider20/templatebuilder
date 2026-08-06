@@ -2,6 +2,7 @@
 
 namespace App\Services\Templates;
 
+use App\Data\Templates\TemplateManifestData;
 use App\Models\TemplateVersion;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
@@ -21,9 +22,11 @@ class TemplateExportService
     /**
      * Exporta un tema: compila dist/ y crea output/{slug}-{version}.zip.
      *
+     * @param  string|null  $version  sobreescritura de versión (p.ej. para re-exportar)
+     *
      * @throws RuntimeException
      */
-    public function export(string $slug, ?int $userId = null): TemplateVersion
+    public function export(string $slug, ?int $userId = null, ?string $version = null): TemplateVersion
     {
         $manifest = $this->manifests->loadBySlug($slug);
 
@@ -48,7 +51,8 @@ class TemplateExportService
 
         File::ensureDirectoryExists($outputDir);
 
-        $zipName = "{$slug}-{$manifest->version}.zip";
+        $version = $version ?? $manifest->version;
+        $zipName = "{$slug}-{$version}.zip";
         $zipPath = $outputDir.'/'.$zipName;
 
         $this->zipVerbatim($manifest, $zipPath);
@@ -57,12 +61,34 @@ class TemplateExportService
 
         return TemplateVersion::create([
             'slug' => $slug,
-            'version' => $manifest->version,
+            'version' => $version,
             'manifest' => $manifest->toManifestArray(),
             'zip_path' => 'output/'.$zipName,
             'checksum' => $checksum,
             'user_id' => $userId,
         ]);
+    }
+
+    /**
+     * Calcula la siguiente versión libre de un slug (incrementa el patch).
+     */
+    public function nextVersion(string $slug, string $baseVersion = '1.0.0'): string
+    {
+        $base = explode('.', $baseVersion);
+
+        $major = $base[0] ?? '1';
+        $minor = $base[1] ?? '0';
+        $patch = (int) ($base[2] ?? 0);
+
+        while (true) {
+            $candidate = "{$major}.{$minor}.{$patch}";
+
+            if (! TemplateVersion::where('slug', $slug)->where('version', $candidate)->exists()) {
+                return $candidate;
+            }
+
+            $patch++;
+        }
     }
 
     /**
@@ -128,7 +154,7 @@ class TemplateExportService
     /**
      * Relee el manifiesto desde el home que contiene el dist/.
      */
-    protected function currentManifestFor(string $jsFile): TemplateManifestDto
+    protected function currentManifestFor(string $jsFile): TemplateManifestData
     {
         $home = basename(dirname(dirname($jsFile)));
         $slug = $home;
@@ -141,7 +167,7 @@ class TemplateExportService
      *
      * @throws RuntimeException
      */
-    protected function zipVerbatim(TemplateManifestDto $manifest, string $zipPath): void
+    protected function zipVerbatim(TemplateManifestData $manifest, string $zipPath): void
     {
         @unlink($zipPath);
 

@@ -11,10 +11,10 @@
  *
  * Salida: public/vendor/react/index.js
  */
-import { build as esbuild } from 'esbuild';
 import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build as esbuild } from 'esbuild';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');

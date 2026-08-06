@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Templates;
 
+use App\Http\Controllers\Controller;
 use App\Services\Templates\TemplateManifestService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -31,8 +32,6 @@ class TemplateViewController extends Controller
 
     /**
      * GET /templates/{slug}/{dir}/{file}
-     *
-     * Sirve un archivo bajo dist/ o assets/ del home del tema.
      */
     public function show(Request $request, string $slug, string $dir, string $file): BinaryFileResponse|Response
     {
@@ -48,7 +47,6 @@ class TemplateViewController extends Controller
 
         $home = $manifest->home;
 
-        // Sin separadores de directorio: solo se sirven archivos planos en dist/.
         if ($dir === 'dist') {
             if (str_contains($file, '/') || str_contains($file, '\\') || $file !== basename($file)) {
                 return abort(404);
@@ -69,8 +67,6 @@ class TemplateViewController extends Controller
 
     /**
      * GET /templates/{slug}/assets/{path}
-     *
-     * Sirve recursos anidados bajo assets/ (rutas canónicas en los TSX).
      */
     public function asset(Request $request, string $slug, string $path): BinaryFileResponse|Response
     {
@@ -84,13 +80,15 @@ class TemplateViewController extends Controller
             return abort(404);
         }
 
-        $real = realpath($this->manifests->homePath($manifest->home).'/assets/'.$path);
+        $homePath = $this->manifests->homePath($manifest->home);
+
+        $real = realpath($homePath.'/assets/'.$path);
 
         if ($real === false) {
             return abort(404);
         }
 
-        $assetsDir = realpath($this->manifests->homePath($manifest->home).'/assets');
+        $assetsDir = realpath($homePath.'/assets');
 
         if ($assetsDir === false || ! str_starts_with($real, $assetsDir.DIRECTORY_SEPARATOR)) {
             return abort(404);

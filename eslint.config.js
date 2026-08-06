@@ -103,6 +103,14 @@ export default [
         },
     },
     {
+        files: ['bin/**/*.mjs'],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+            },
+        },
+    },
+    {
         ignores: [
             'vendor',
             'node_modules',
@@ -114,6 +122,8 @@ export default [
             'resources/js/components/ui/*',
             'resources/js/routes/**',
             'resources/js/wayfinder/**',
+            'resources/js/**/dist/**',
+            'resources/js/**/*.stub',
         ],
     },
     prettier,

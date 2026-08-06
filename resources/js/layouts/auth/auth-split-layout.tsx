@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import AppearanceToggleTab from '@/components/appearance-tabs';
 import AppLogo from '@/components/app-logo';
+import AppearanceToggleTab from '@/components/appearance-tabs';
 
 export default function AuthSplitLayout({
     title = '',
