@@ -1,0 +1,41 @@
+import { Form } from '@inertiajs/react';
+
+interface {{ stub_ucfirst }}LoginProps {
+    canResetPassword?: boolean;
+}
+
+export default function {{ stub_ucfirst }}Login({ canResetPassword = true }: {{ stub_ucfirst }}LoginProps) {
+    return (
+        <div className="mx-auto w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
+            <h2 className="mb-6 text-2xl font-semibold text-content">Iniciar sesión</h2>
+            <Form action="/login" method="post" className="flex flex-col gap-4">
+                <input
+                    name="email"
+                    type="email"
+                    required
+                    autoFocus
+                    className="rounded-md border border-input bg-background px-3 py-2 text-content"
+                    placeholder="Email"
+                />
+                <input
+                    name="password"
+                    type="password"
+                    required
+                    className="rounded-md border border-input bg-background px-3 py-2 text-content"
+                    placeholder="Contraseña"
+                />
+                <button
+                    type="submit"
+                    className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                    Entrar
+                </button>
+                {canResetPassword ? (
+                    <a href="/forgot-password" className="text-center text-sm text-primary hover:underline">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                ) : null}
+            </Form>
+        </div>
+    );
+}

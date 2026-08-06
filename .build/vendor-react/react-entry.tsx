@@ -1,0 +1,38 @@
+import React from 'react';
+
+export default React;
+
+export const {
+    useCallback,
+    useContext,
+    useDebugValue,
+    useDeferredValue,
+    useEffect,
+    useId,
+    useImperativeHandle,
+    useInsertionEffect,
+    useLayoutEffect,
+    useMemo,
+    useReducer,
+    useRef,
+    useState,
+    useSyncExternalStore,
+    useTransition,
+    use,
+    Fragment,
+    createElement,
+    createContext,
+    createRef,
+    forwardRef,
+    lazy,
+    memo,
+    isValidElement,
+    startTransition,
+    version,
+    Children,
+    cloneElement,
+    Component,
+    PureComponent,
+    createFactory,
+    act,
+} = React;

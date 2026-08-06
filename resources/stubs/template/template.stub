@@ -1,0 +1,10 @@
+import {{ stub_ucfirst }}Layout from '@/layouts/{{ type }}/templates/{{ slug }}/{{ slug }}-{{ type }}-layout';
+
+interface {{ stub_ucfirst }}TemplateProps {
+    breadcrumbs?: { label: string; href?: string }[];
+    children: React.ReactNode;
+}
+
+export default function {{ stub_ucfirst }}Template({ children }: {{ stub_ucfirst }}TemplateProps) {
+    return <{{ stub_ucfirst }}Layout>{children}</{{ stub_ucfirst }}Layout>;
+}
