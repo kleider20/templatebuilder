@@ -8,6 +8,7 @@ Los layouts se organizan en una jerarquía de **Wrappers/Templates**. La elecci�
 layout: (name) => {
   switch (true) {
     case name === 'welcome':          return null;              // sin layout
+    case name === 'templates/preview':return null;              // preview full-screen del tema
     case name.startsWith('auth/'):    return AuthLayout;        // AuthLayout
     case name.startsWith('settings/'):return [AppLayout, SettingsLayout]; // doble
     default:                          return AppLayout;         // AppLayout
@@ -34,35 +35,32 @@ auth-layout.tsx (re-exporta auth-simple-layout)
 settings/layout.tsx              ← sub-navegación (Profile/Security/Appearance)
 ```
 
-## Superficies del template builder (`layouts/{superficie}/default/`)
+## Superficies del template builder (`layouts/default/`)
 
-Además de los layouts del sistema, existen carpetas de **temas default por superficie** usadas por el template builder (fallback y base de scaffolds, NO exportables):
+Además de los layouts del sistema, existe la carpeta de **temas default** usada por el template builder (fallback y base de scaffolds, NO exportables). Sigue el mismo naming que los temas: templates en la raíz y layouts/roles en `default/components/{superficie}/`:
 
 ```
 layouts/
-├── landing/default/
-│   ├── welcome-layout.tsx   ← config: default 'landing'
-│   └── welcome-template.tsx
-├── dashboard/default/
-│   ├── dashboard-layout.tsx ← config: default 'dashboard'
-│   └── dashboard-template.tsx
-├── forms/default/
-│   ├── forms-layout.tsx     ← config: default 'forms'
-│   └── forms-template.tsx
-└── auth/default/
-    ├── auth-layout.tsx      ← config: default 'auth'
-    ├── auth-template.tsx
-    ├── login.tsx            ← config: default 'login'
-    └── logout.tsx           ← config: default 'logout'
+├── default/
+│   ├── landing-default-template.tsx ← config: default 'landing'
+│   ├── dashboard-default-template.tsx
+│   ├── forms-default-template.tsx
+│   ├── auth-default-template.tsx
+│   └── components/
+│       ├── landing/   → landing-default-layout.tsx
+│       ├── dashboard/ → dashboard-default-layout.tsx
+│       ├── forms/     → forms-default-layout.tsx
+│       └── auth/      → auth-default-layout.tsx, auth-default-login.tsx, auth-default-logout.tsx
 ```
 
-Estos paths se registran en `config/templates.php::defaults`. No participan en el catálogo público ni en la exportación.
+Los temas de usuario son carpetas hermanas `layouts/{slug}/` con el mismo patrón. Estos paths se registran en `config/templates.php::defaults`. No participan en el catálogo público ni en la exportación.
 
 ## Layouts públicos
 
 1. **`AppLayout`** (`layouts/app-layout.tsx`) — re-exporta el template de app; usado por páginas autenticadas (dashboard, settings y resto).
 2. **`AuthLayout`** (`layouts/auth-layout.tsx`) — re-exporta el template auth simple; usado por páginas `auth/*`.
 3. **`SettingsLayout`** (`layouts/settings/layout.tsx`) — sub-nav de ajustes; se monta **además** de `AppLayout` para páginas `settings/*` (layout compuesto): `[AppLayout, SettingsLayout]`.
+4. **`templates/preview`** — **sin layout** (como `welcome`): el preview aplica el template del tema a toda la pantalla con un panel de controles flotante. Ver [`../templates/README.md`](../templates/README.md).
 
 ## Layouts compuestos
 

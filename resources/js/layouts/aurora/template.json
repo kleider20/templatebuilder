@@ -1,0 +1,132 @@
+{
+    "name": "Aurora",
+    "slug": "aurora",
+    "type": [
+        "landing",
+        "dashboard",
+        "forms",
+        "auth"
+    ],
+    "version": "1.0.0",
+    "author": "System",
+    "description": "Tema Aurora multi-superficie.",
+    "thumbnail": "thumbnails/preview.png",
+    "home": "aurora",
+    "components": {
+        "landing": {
+            "template": "aurora/landing-aurora-template.tsx",
+            "layout": "aurora/components/landing/landing-aurora-layout.tsx",
+            "header": "aurora/components/landing/landing-aurora-header.tsx",
+            "footer": "aurora/components/landing/landing-aurora-footer.tsx",
+            "topmenu": "aurora/components/landing/landing-aurora-topmenu.tsx"
+        },
+        "dashboard": {
+            "template": "aurora/dashboard-aurora-template.tsx",
+            "layout": "aurora/components/dashboard/dashboard-aurora-layout.tsx",
+            "sidebar": "aurora/components/dashboard/dashboard-aurora-sidebar.tsx",
+            "topmenu": "aurora/components/dashboard/dashboard-aurora-topmenu.tsx"
+        },
+        "forms": {
+            "template": "aurora/forms-aurora-template.tsx",
+            "layout": "aurora/components/forms/forms-aurora-layout.tsx",
+            "header": "aurora/components/forms/forms-aurora-header.tsx",
+            "footer": "aurora/components/forms/forms-aurora-footer.tsx"
+        },
+        "auth": {
+            "template": "aurora/auth-aurora-template.tsx",
+            "layout": "aurora/components/auth/auth-aurora-layout.tsx",
+            "login": "aurora/components/auth/auth-aurora-login.tsx",
+            "logout": "aurora/components/auth/auth-aurora-logout.tsx"
+        }
+    },
+    "theme": {
+        "roles": [
+            "primary",
+            "secondary",
+            "accent",
+            "background",
+            "surface",
+            "text"
+        ],
+        "default": "indigo",
+        "palettes": [
+            {
+                "id": "indigo",
+                "label": "\u00cdndigo",
+                "colors": {
+                    "primary": "#4f46e5",
+                    "secondary": "#818cf8",
+                    "accent": "#22d3ee",
+                    "background": "#ffffff",
+                    "surface": "#f4f4f5",
+                    "text": "#18181b"
+                },
+                "dark": {
+                    "primary": "#6366f1",
+                    "background": "#09090b",
+                    "surface": "#18181b",
+                    "text": "#f4f4f5"
+                }
+            },
+            {
+                "id": "emerald",
+                "label": "Esmeralda",
+                "colors": {
+                    "primary": "#059669",
+                    "secondary": "#34d399",
+                    "accent": "#f59e0b",
+                    "background": "#ffffff",
+                    "surface": "#f4f4f5",
+                    "text": "#18181b"
+                },
+                "dark": {
+                    "primary": "#10b981",
+                    "background": "#09090b",
+                    "surface": "#18181b",
+                    "text": "#f4f4f5"
+                }
+            },
+            {
+                "id": "rose",
+                "label": "Rosa",
+                "colors": {
+                    "primary": "#e11d48",
+                    "secondary": "#fb7185",
+                    "accent": "#8b5cf6",
+                    "background": "#ffffff",
+                    "surface": "#f4f4f5",
+                    "text": "#18181b"
+                },
+                "dark": {
+                    "primary": "#f43f5e",
+                    "background": "#09090b",
+                    "surface": "#18181b",
+                    "text": "#f4f4f5"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "hero_title": {
+            "type": "text",
+            "label": "T\u00edtulo del hero",
+            "default": "Bienvenido"
+        },
+        "show_topmenu": {
+            "type": "bool",
+            "label": "Mostrar top menu",
+            "default": true
+        }
+    },
+    "dependencies": [],
+    "requires": {
+        "php": ">=8.3",
+        "laravel": ">=13",
+        "react": ">=19",
+        "tailwind": ">=4"
+    },
+    "exports": {
+        "bundle": "dist/aurora.js",
+        "styles": "dist/aurora.css"
+    }
+}

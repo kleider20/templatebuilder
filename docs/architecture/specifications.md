@@ -102,8 +102,8 @@ Documento con las especificaciones técnicas exactas del proyecto (versiones rea
 | Script | Comando | Descripción |
 |--------|---------|-------------|
 | Build | `npm run build` | Build de Vite |
-| Build vendor React | `npm run build:vendor` | Genera `public/vendor/react/index.js` (bundle ESM de react para el preview vía import map) |
-| Build template | `node bin/build-template.mjs {slug}` | Compila un tema del builder a `dist/` |
+| Build vendor React | `npm run build:vendor` | Genera `public/vendor/react/index.js` (bundle ESM de react resuelto vía import map por la app y los bundles remotos de temas; el preview interno ya no depende de él) |
+| Build template | `node bin/build-template.mjs {slug}` | Compila un tema del builder a `dist/` (JS ESM con react externa + CSS Tailwind v4 autocontenido: roles y tokens semánticos mapeados a `--tpl-*`) |
 | Dev | `npm run dev` / `composer run dev` | Vite + servidor + queue |
 | Lint | `npm run lint` / `composer run lint` | ESLint / Pint |
 | Typecheck | `npm run types:check` / `composer run types:check` | `tsc --noEmit` / PHPStan |

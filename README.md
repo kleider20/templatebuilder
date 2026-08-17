@@ -8,19 +8,22 @@ temas con un sistema de paletas/tokens y consumo "hot" en proyectos finales.
 
 ```
 resources/js/layouts/
-├── landing/                      ← superficie
-│   ├── default/                  ← tema base INTERNO (NO exportable)
-│   │   ├── welcome-layout.tsx
-│   │   └── welcome-template.tsx
-│   └── templates/{slug}/         ← variante de tema exportable
-│       ├── template.json         ← manifiesto (HOME del tema)
-│       ├── {slug}-template.tsx   ← TSX de la superficie
-│       ├── {slug}-layout.tsx
-│       ├── components/           ← header/footer/topmenu…
-│       ├── assets/ thumbnails/ dist/ ← solo en el HOME
-│       └── {slug}.css            ← CSS custom opcional (convención)
-├── dashboard/ ├── forms/ └── auth/
-│   (auth/default/ además define login.tsx y logout.tsx)
+├── default/                      ← temas base INTERNOS (NO exportables)
+│   ├── landing-default-template.tsx
+│   ├── dashboard-default-template.tsx
+│   ├── forms-default-template.tsx
+│   ├── auth-default-template.tsx
+│   └── components/{superficie}/  ← layouts/roles: {tipo}-default-{rol}.tsx
+├── aurora/                       ← tema de usuario (HOME = "aurora")
+│   ├── template.json             ← manifiesto (HOME del tema)
+│   ├── landing-aurora-template.tsx  ← templates en la raíz
+│   ├── dashboard-aurora-template.tsx
+│   ├── forms-aurora-template.tsx
+│   ├── auth-aurora-template.tsx
+│   ├── components/{superficie}/  ← layouts/roles: {tipo}-{slug}-{rol}.tsx
+│   ├── assets/ thumbnails/ dist/ ← solo en el HOME
+│   └── aurora.css                ← CSS custom opcional (convención)
+└── (wrappers del sistema: app/, auth/, settings/, app-layout.tsx, auth-layout.tsx)
 ```
 
 - **Superficies:** `landing | dashboard | forms | auth`. Cada una declara su
@@ -29,13 +32,14 @@ resources/js/layouts/
   - dashboard: `template, layout, sidebar, topmenu`
   - forms: `template, layout, header, footer`
   - auth: `template, layout, login, logout`
-- **Tema = slug** presente en una o varias superficies. El **home** es la carpeta
-  de la primera superficie de su `type` y es la única que contiene el manifiesto,
-  `assets/`, `thumbnails/` y `dist/`.
+- **Tema = carpeta hermana en `layouts/{slug}/`** con su `template.json` en la
+  raíz. El **home** es esa carpeta y es la única que contiene el manifiesto,
+  `assets/`, `thumbnails/` y `dist/`. Templates `{tipo}-{slug}-template.tsx` en
+  la raíz y layouts/roles en `components/{tipo}/{tipo}-{slug}-{rol}.tsx`.
 - `default/` es el tema base interno: no aparece en el catálogo ni en los
   exports; sirve de fallback y de referencia de scaffolds.
-- Descubrimiento: escaneo de `layouts/*/templates/*/template.json` (server +
-  glob frontend). No hay slugs hardcodeados.
+- Descubrimiento: escaneo de `layouts/*/template.json` (server + glob
+  frontend). No hay slugs hardcodeados.
 
 ## Manifiesto `template.json`
 
@@ -100,16 +104,18 @@ sandbox y proyectos finales: `/templates/{slug}/assets/...`. Carpeta física en
   Genera el home con manifiesto de 3 paletas (indigo/emerald/rose, default
   indigo), `assets/`, `thumbnails/`, TSX por superficie y `{slug}.css` solo con
   `--css`.
-- **Editar:** `/templates/{slug}/editor` — árbol multi-raíz (una raíz por
-  superficie), `@monaco-editor/react`, Guardar (PUT) con Ctrl/Cmd+S e indicador
-  de cambios. El botón "Manifiesto" edita los bloques `settings`/`theme` del
-  `template.json` validando la sección 3.
+- **Editar:** `/templates/{slug}/editor` — árbol plano del tema (recorre el
+  home una vez), `@monaco-editor/react`, Guardar (PUT) con Ctrl/Cmd+S e
+  indicador de cambios. El botón "Manifiesto" edita los bloques `settings`/
+  `theme` del `template.json` validando la sección 3.
 - **Previsualizar:** `/templates/{slug}/preview` — selector de superficie
   (landing/dashboard/forms/login), toggle dark/light, GUI Tema (paletas +
-  pickers + reset) y formulario de settings. En dev, import dinámico con
-  cache-busting (`?t=Date.now()`).
+  pickers + reset) y formulario de settings. Renderiza el tema desde su
+  **código fuente** (`import.meta.glob` sobre `layouts/**/*.tsx`, indexado por
+  `manifest.components`); en dev el `<link>` al CSS del tema lleva cache-busting
+  (`?t=Date.now()`).
 - **Exportar:** POST `/templates/{slug}/export` compila `dist/` y crea
-  `output/{slug}-{version}.zip` (copia verbatim de todas las superficies +
+  `output/{slug}-{version}.zip` (copia verbatim del home completo +
   `template.json`), registrando una `TemplateVersion` con sha256. El historial
   y la descarga viven en `/templates/versions`.
 
@@ -117,9 +123,9 @@ sandbox y proyectos finales: `/templates/{slug}/assets/...`. Carpeta física en
 
 El consumidor instala el ZIP y, **una sola vez** (no por template), configura:
 
-1. Copiar el ZIP en su proyecto: `{superficie}/templates/{slug}/**` →
-   `resources/js/layouts/` (verbatim); `{home}/assets/**` y `thumbnails/` →
-   `public/templates/{slug}/assets/`; `{home}/dist/**` →
+1. Copiar el ZIP en su proyecto: `{home}/**` (verbatim, incluye `template.json`
+   y todos los `components/`) → `resources/js/layouts/`; `{home}/assets/**` y
+   `thumbnails/` → `public/templates/{slug}/assets/`; `{home}/dist/**` →
    `public/templates/{slug}/dist/`.
 2. Insertar `template.json` en la tabla `installed_templates`
    (slug, version, manifest, active).

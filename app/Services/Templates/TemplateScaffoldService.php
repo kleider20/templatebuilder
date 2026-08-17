@@ -48,7 +48,7 @@ class TemplateScaffoldService
 
         $types = array_values(array_unique($types));
 
-        $home = $types[0].'/templates/'.$slug;
+        $home = $slug;
         $homeDir = $this->manifests->homePath($home);
 
         if (is_dir($homeDir)) {
@@ -57,14 +57,11 @@ class TemplateScaffoldService
 
         $stubDir = resource_path('stubs/template');
 
-        foreach ($types as $type) {
-            $surfaceDir = $this->manifests->basePath().'/'.$type.'/templates/'.$slug;
+        File::makeDirectory($homeDir.'/assets', 0755, true);
+        File::makeDirectory($homeDir.'/thumbnails', 0755, true);
 
-            if ($type === $types[0]) {
-                $this->makeHome($stubDir, $type, $slug, $surfaceDir);
-            } else {
-                $this->makeSurface($stubDir, $type, $slug, $surfaceDir);
-            }
+        foreach ($types as $type) {
+            $this->makeSurface($stubDir, $type, $slug, $homeDir);
         }
 
         $this->writeManifest($stubDir, $slug, $name, $types, $home, $author, $withCss);
@@ -73,22 +70,12 @@ class TemplateScaffoldService
     }
 
     /**
-     * Crea el home del tema: superficies de type[0] + assets/ + thumbnails/.
+     * Crea los archivos de una superficie (roles según vocabulario) dentro
+     * del home del tema: templates en la raíz y components/{tipo}/.
      */
-    protected function makeHome(string $stubDir, string $type, string $slug, string $surfaceDir): void
+    protected function makeSurface(string $stubDir, string $type, string $slug, string $homeDir): void
     {
-        File::makeDirectory($surfaceDir.'/assets', 0755, true);
-        File::makeDirectory($surfaceDir.'/thumbnails', 0755, true);
-
-        $this->makeSurface($stubDir, $type, $slug, $surfaceDir);
-    }
-
-    /**
-     * Crea los archivos de una superficie (roles según vocabulario).
-     */
-    protected function makeSurface(string $stubDir, string $type, string $slug, string $surfaceDir): void
-    {
-        $componentsDir = $surfaceDir.'/components';
+        $componentsDir = $homeDir.'/components/'.$type;
 
         File::makeDirectory($componentsDir, 0755, true);
 
@@ -107,10 +94,10 @@ class TemplateScaffoldService
                 'stub_ucfirst' => ucfirst($slug),
             ]);
 
-            if ($role === 'template' || $role === 'layout') {
-                $path = $surfaceDir.'/'.$this->surfaceFile($type, $slug, $role);
+            if ($role === 'template') {
+                $path = $homeDir.'/'.$this->templateFile($type, $slug);
             } else {
-                $path = $componentsDir.'/'.$slug.'-'.$this->roleFile($role);
+                $path = $componentsDir.'/'.$this->roleFile($type, $slug, $role);
             }
 
             File::put($path, $content);
@@ -118,25 +105,19 @@ class TemplateScaffoldService
     }
 
     /**
-     * Nombre de archivo para template/layout según superficie.
+     * Nombre de archivo de un template en la raíz del tema.
      */
-    protected function surfaceFile(string $type, string $slug, string $role): string
+    protected function templateFile(string $type, string $slug): string
     {
-        return $type === 'landing'
-            ? $slug.'-'.($role === 'template' ? 'template' : 'layout').'.tsx'
-            : $slug.'-'.$type.'-'.($role === 'template' ? 'template' : 'layout').'.tsx';
+        return $type.'-'.$slug.'-template.tsx';
     }
 
     /**
-     * Nombre de archivo de un rol secundario.
+     * Nombre de archivo de un rol dentro de components/{tipo}/.
      */
-    protected function roleFile(string $role): string
+    protected function roleFile(string $type, string $slug, string $role): string
     {
-        return match ($role) {
-            'login' => 'login.tsx',
-            'logout' => 'logout.tsx',
-            default => $role.'.tsx',
-        };
+        return $type.'-'.$slug.'-'.$role.'.tsx';
     }
 
     /**
@@ -269,17 +250,9 @@ class TemplateScaffoldService
         $map = [];
 
         foreach ($roles as $role) {
-            $map[$role] = match ($role) {
-                'template' => $type === 'landing'
-                    ? "{$type}/templates/{$slug}/{$slug}-template.tsx"
-                    : "{$type}/templates/{$slug}/{$slug}-{$type}-template.tsx",
-                'layout' => $type === 'landing'
-                    ? "{$type}/templates/{$slug}/{$slug}-layout.tsx"
-                    : "{$type}/templates/{$slug}/{$slug}-{$type}-layout.tsx",
-                'login' => "{$type}/templates/{$slug}/components/{$slug}-login.tsx",
-                'logout' => "{$type}/templates/{$slug}/components/{$slug}-logout.tsx",
-                default => "{$type}/templates/{$slug}/components/{$slug}-{$role}.tsx",
-            };
+            $map[$role] = $role === 'template'
+                ? "{$slug}/{$type}-{$slug}-template.tsx"
+                : "{$slug}/components/{$type}/{$type}-{$slug}-{$role}.tsx";
         }
 
         return $map;

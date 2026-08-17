@@ -42,7 +42,7 @@ const groupTreeBySection = (tree: TemplateTreeFile[]): SectionGroup[] => {
     const bySection = new Map<string, TemplateTreeFile[]>();
 
     for (const file of tree) {
-        const section = file.path.split('/')[0] ?? 'otros';
+        const { section } = describeSection(file.path);
         const files = bySection.get(section) ?? [];
 
         files.push(file);
@@ -61,8 +61,7 @@ const groupTreeBySection = (tree: TemplateTreeFile[]): SectionGroup[] => {
         groups.push({
             section,
             files: files.map((file) => {
-                // Ruta relativa a la sección: sección/templates/<slug>/…
-                const relative = file.path.split('/').slice(3).join('/');
+                const relative = describeSection(file.path).relative;
                 const duplicate = counts.get(file.name)! > 1;
 
                 return {
@@ -75,6 +74,23 @@ const groupTreeBySection = (tree: TemplateTreeFile[]): SectionGroup[] => {
     }
 
     return groups;
+};
+
+/**
+ * Deriva la sección (tipo de superficie) y la ruta relativa de un archivo del
+ * tema. Los componentes viven en components/{tipo}/ y los templates en la raíz
+ * del home ({tipo}-{slug}-template.tsx).
+ */
+const describeSection = (path: string): { section: string; relative: string } => {
+    const componentMatch = path.match(/components\/(\w+)\/(.+)$/);
+
+    if (componentMatch) {
+        return { section: componentMatch[1], relative: componentMatch[2] };
+    }
+
+    const type = path.split('/').pop()?.split('-')[0] ?? 'otros';
+
+    return { section: type, relative: path.split('/').pop() ?? path };
 };
 
 export default function TemplateEditor({

@@ -78,4 +78,4 @@ Cookies excluidas de cifrado: `appearance`, `sidebar_state`.
 
 ## Console
 
-`routes/console.php` solo define el comando stock `inspire`. Comandos personalizados (`app/Console/Commands`): `TemplateMakeCommand` (scaffold de un tema bajo `layouts/{superficie}/{slug}`).
+`routes/console.php` solo define el comando stock `inspire`. Comandos personalizados (`app/Console/Commands`): `TemplateMakeCommand` (scaffold de un tema bajo `layouts/{slug}`).

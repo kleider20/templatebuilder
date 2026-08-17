@@ -23,7 +23,7 @@ test('editor index lista el árbol del tema', function () {
 
     $user = templateAdminUser();
 
-    $response = $this->actingAs($user)->get(route('templates.editor', 'aurora').'?path=landing/templates/aurora/aurora-template.tsx');
+    $response = $this->actingAs($user)->get(route('templates.editor', 'aurora').'?path=aurora/landing-aurora-template.tsx');
 
     $response->assertOk()
         ->assertInertia(fn ($page) => $page
@@ -36,7 +36,7 @@ test('updateFile guarda el contenido de un archivo válido', function () {
     app(TemplateScaffoldService::class)->make(slug: 'aurora', types: ['landing'], name: 'Aurora');
 
     $user = templateAdminUser();
-    $path = 'landing/templates/aurora/aurora-layout.tsx';
+    $path = 'aurora/components/landing/landing-aurora-layout.tsx';
 
     $response = $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
         'path' => $path,
@@ -53,7 +53,7 @@ test('updateFile rechaza path con ..', function () {
     $user = templateAdminUser();
 
     $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
-        'path' => 'landing/templates/aurora/../../secret.txt',
+        'path' => 'aurora/../../secret.txt',
         'content' => 'hack',
     ])->assertUnprocessable();
 });
@@ -64,7 +64,7 @@ test('updateFile rechaza rutas fuera del tema', function () {
     $user = templateAdminUser();
 
     $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
-        'path' => 'dashboard/templates/other/file.tsx',
+        'path' => 'aurora/other/file.tsx',
         'content' => 'hack',
     ])->assertUnprocessable();
 });
@@ -75,7 +75,7 @@ test('updateFile rechaza extensiones fuera de allowlist', function () {
     $user = templateAdminUser();
 
     $this->actingAs($user)->putJson(route('templates.editor.update', 'aurora'), [
-        'path' => 'landing/templates/aurora/aurora.evil',
+        'path' => 'aurora/landing-aurora.evil',
         'content' => 'hack',
     ])->assertUnprocessable();
 });

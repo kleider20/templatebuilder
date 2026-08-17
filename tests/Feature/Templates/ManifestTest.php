@@ -29,7 +29,7 @@ function makeTestTheme(array $types = ['landing', 'dashboard'], string $slug = '
 test('template:make crea el home del tema con roles y theme de 3 paletas', function () {
     $home = makeTestTheme();
 
-    expect($home)->toBe('landing/templates/aurora');
+    expect($home)->toBe('aurora');
 
     $manifestPath = templateTestBase().'/'.$home.'/template.json';
     expect(File::exists($manifestPath))->toBeTrue();
@@ -57,12 +57,12 @@ test('make crea carpetas por superficie con TSX', function () {
     makeTestTheme();
 
     $surfaceFiles = [
-        'landing/templates/aurora/aurora-template.tsx',
-        'landing/templates/aurora/aurora-layout.tsx',
-        'landing/templates/aurora/components/aurora-header.tsx',
-        'dashboard/templates/aurora/aurora-dashboard-template.tsx',
-        'dashboard/templates/aurora/aurora-dashboard-layout.tsx',
-        'dashboard/templates/aurora/components/aurora-topmenu.tsx',
+        'aurora/landing-aurora-template.tsx',
+        'aurora/components/landing/landing-aurora-layout.tsx',
+        'aurora/components/landing/landing-aurora-header.tsx',
+        'aurora/dashboard-aurora-template.tsx',
+        'aurora/components/dashboard/dashboard-aurora-layout.tsx',
+        'aurora/components/dashboard/dashboard-aurora-topmenu.tsx',
     ];
 
     foreach ($surfaceFiles as $file) {
@@ -72,12 +72,12 @@ test('make crea carpetas por superficie con TSX', function () {
 
 test('make genera css custom solo con --css', function () {
     makeTestTheme(['landing', 'auth'], 'no-css');
-    expect(File::exists(templateTestBase().'/landing/templates/no-css/no-css.css'))->toBeFalse();
+    expect(File::exists(templateTestBase().'/no-css/no-css.css'))->toBeFalse();
 
     $scaffold = app(TemplateScaffoldService::class);
     $scaffold->make(slug: 'with-css', types: ['landing'], name: 'Con CSS', withCss: true);
 
-    expect(File::exists(templateTestBase().'/landing/templates/with-css/with-css.css'))->toBeTrue();
+    expect(File::exists(templateTestBase().'/with-css/with-css.css'))->toBeTrue();
 });
 
 test('make rechaza slugs invalidos o sin superficie', function () {
@@ -93,7 +93,7 @@ test('rol de componente fuera de vocabulario falla la validacion', function () {
     $manifestPath = templateTestBase().'/'.$home.'/template.json';
     $manifest = json_decode(File::get($manifestPath), true);
 
-    $manifest['components']['landing']['notarol'] = 'landing/templates/aurora/aurora-layout.tsx';
+    $manifest['components']['landing']['notarol'] = 'aurora/landing-aurora-layout.tsx';
     File::put($manifestPath, json_encode($manifest));
 
     $service = app(TemplateManifestService::class);

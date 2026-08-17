@@ -14,25 +14,19 @@ class BuildEditorTreeAction
     ) {}
 
     /**
-     * Árbol multi-raíz del editor (una raíz por superficie del tema).
+     * Árbol plano del editor para un tema: recorre el home una sola vez.
      *
      * @return array<int, TemplateTreeNodeData>
      */
     public function handle(TemplateManifestData $manifest): array
     {
-        $tree = [];
+        $root = $this->manifests->homePath($manifest->home);
 
-        foreach ($manifest->types as $surface) {
-            $root = $this->manifests->basePath().'/'.$surface.'/templates/'.$manifest->slug;
-
-            if (! is_dir($root)) {
-                continue;
-            }
-
-            $tree = array_merge($tree, $this->walk($root, $root, $surface.'/templates/'.$manifest->slug));
+        if (! is_dir($root)) {
+            return [];
         }
 
-        return $tree;
+        return $this->walk($root, $root, $manifest->home);
     }
 
     /**

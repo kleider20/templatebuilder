@@ -27,18 +27,9 @@ class ResolveTemplateFileAction
 
         $normalized = str_replace('\\', '/', $relPath);
 
-        $insideTheme = false;
+        $expected = $manifest->home.'/';
 
-        foreach ($manifest->types as $surface) {
-            $expected = $surface.'/templates/'.$manifest->slug.'/';
-
-            if (str_starts_with($normalized, $expected)) {
-                $insideTheme = true;
-                break;
-            }
-        }
-
-        if (! $insideTheme) {
+        if (! str_starts_with($normalized, $expected)) {
             throw new RuntimeException('La ruta debe pertenecer al tema.');
         }
 

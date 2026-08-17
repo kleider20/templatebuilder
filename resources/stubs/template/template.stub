@@ -1,4 +1,4 @@
-import {{ stub_ucfirst }}Layout from '@/layouts/{{ type }}/templates/{{ slug }}/{{ slug }}-{{ type }}-layout';
+import {{ stub_ucfirst }}Layout from '@/layouts/{{ slug }}/components/{{ type }}/{{ type }}-{{ slug }}-layout';
 
 interface {{ stub_ucfirst }}TemplateProps {
     breadcrumbs?: { label: string; href?: string }[];

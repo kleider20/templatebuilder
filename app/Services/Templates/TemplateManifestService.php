@@ -46,25 +46,17 @@ class TemplateManifestService
     {
         $manifests = [];
 
-        foreach ($this->surfaces() as $surface) {
-            $dir = $this->basePath().'/'.$surface.'/templates';
+        foreach (File::directories($this->basePath()) as $themeDir) {
+            $manifestPath = $themeDir.'/template.json';
 
-            if (! is_dir($dir)) {
+            if (! is_file($manifestPath)) {
                 continue;
             }
 
-            foreach (File::directories($dir) as $templateDir) {
-                $manifestPath = $templateDir.'/template.json';
-
-                if (! is_file($manifestPath)) {
-                    continue;
-                }
-
-                try {
-                    $manifests[] = $this->loadFromPath($manifestPath);
-                } catch (RuntimeException) {
-                    // Los manifiestos inválidos no entran en el catálogo.
-                }
+            try {
+                $manifests[] = $this->loadFromPath($manifestPath);
+            } catch (RuntimeException) {
+                // Los manifiestos inválidos no entran en el catálogo.
             }
         }
 
@@ -104,20 +96,15 @@ class TemplateManifestService
     }
 
     /**
-     * Localiza el path de template.json de un slug recorriendo superficies,
-     * sin validar el contenido (para propagar errores reales de validación).
+     * Localiza el path de template.json de un slug, sin validar el contenido
+     * (para propagar errores reales de validación). Cada tema es una carpeta
+     * hermana en layouts/ con su template.json en la raíz.
      */
     protected function findManifestPath(string $slug): ?string
     {
-        foreach ($this->surfaces() as $surface) {
-            $manifestPath = $this->basePath().'/'.$surface.'/templates/'.$slug.'/template.json';
+        $manifestPath = $this->basePath().'/'.$slug.'/template.json';
 
-            if (is_file($manifestPath)) {
-                return $manifestPath;
-            }
-        }
-
-        return null;
+        return is_file($manifestPath) ? $manifestPath : null;
     }
 
     /**
@@ -168,10 +155,14 @@ class TemplateManifestService
             }
         }
 
-        $home = $types[0].'/templates/'.$slug;
+        $home = $slug;
 
         if (($manifest['home'] ?? null) !== $home) {
             throw new RuntimeException("home debe ser [{$home}].");
+        }
+
+        if (! is_dir($this->homePath($home))) {
+            throw new RuntimeException("No existe el directorio del tema [{$home}].");
         }
 
         if (! isset($manifest['components']) || ! is_array($manifest['components'])) {
@@ -179,11 +170,6 @@ class TemplateManifestService
         }
 
         foreach ($types as $type) {
-            $surfaceDir = $this->basePath().'/'.$type.'/templates/'.$slug;
-            if (! is_dir($surfaceDir)) {
-                throw new RuntimeException("No existe el directorio de la superficie [{$type}].");
-            }
-
             $roles = $manifest['components'][$type] ?? null;
 
             if (! is_array($roles)) {

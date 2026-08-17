@@ -6,7 +6,7 @@
 /public/hot
 /public/storage
 /output/*.zip
-/resources/js/layouts/*/templates/*/dist/
+/resources/js/layouts/*/dist/
 /storage/*.key
 /storage/pail
 /resources/js/actions

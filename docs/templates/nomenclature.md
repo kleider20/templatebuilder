@@ -15,6 +15,19 @@ Convenciones para crear y organizar layouts/templates y componentes en el fronte
 - Excepción de **PascalCase** solo en `actions/` (refleja clases PHP generadas por Wayfinder).
 - Componentes `ui/` de una palabra: `button.tsx`, `card.tsx`.
 
+## Temas del template builder
+
+Cada tema es una carpeta hermana en `resources/js/layouts/{slug}/` (su `home`), con naming
+`{tipo}-{slug}-{rol}.tsx`:
+
+- **Templates** en la raíz: `landing-aurora-template.tsx`, `dashboard-aurora-template.tsx`.
+- **Layouts/roles** en `components/{tipo}/`: `landing-aurora-layout.tsx`,
+  `landing-aurora-header.tsx`, `dashboard-aurora-sidebar.tsx`, `auth-aurora-login.tsx`.
+
+Los **temas default** (no exportables) viven en `resources/js/layouts/default/` con el mismo
+patrón usando `{slug} = default` (`landing-default-template.tsx`,
+`default/components/landing/landing-default-layout.tsx`).
+
 ## Exportaciones
 
 - **`ui/` components** → exportación **nombrada** (`export function Button`).

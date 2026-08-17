@@ -163,7 +163,7 @@ class TemplateExportService
     }
 
     /**
-     * Empaqueta verbatim: template.json + cada superficie del tema.
+     * Empaqueta verbatim: template.json al root + el home completo del tema.
      *
      * @throws RuntimeException
      */
@@ -180,11 +180,7 @@ class TemplateExportService
         // template.json al root del ZIP.
         $zip->addFile($this->manifests->homePath($manifest->home).'/template.json', 'template.json');
 
-        foreach ($manifest->types as $surface) {
-            $surfaceDir = $this->manifests->basePath().'/'.$surface.'/templates/'.$manifest->slug;
-
-            $this->addDirectory($zip, $surfaceDir, $surface.'/templates/'.$manifest->slug);
-        }
+        $this->addDirectory($zip, $this->manifests->homePath($manifest->home), $manifest->home);
 
         $zip->close();
     }

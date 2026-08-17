@@ -31,7 +31,7 @@ app/
 │   └── ProfileValidationRules.php     # Traits: profileRules()/nameRules()/emailRules()
 ├── Console/
 │   └── Commands/
-│       ├── TemplateMakeCommand.php    # Scaffold de un tema bajo layouts/{superficie}/{slug}
+│       ├── TemplateMakeCommand.php    # Scaffold de un tema bajo layouts/{slug}
 │       └── UserPromoteCommand.php     # `user:promote` — asigna rol super_admin
 ├── Data/
 │   ├── Templates/
@@ -147,7 +147,7 @@ app/
 ## Services (`app/Services/Templates`)
 
 - **`TemplateManifestService`** — parsea y valida los manifiestos de tema; resuelve rutas seguras (evita path traversal y devuelve `TemplateManifestData`).
-- **`TemplateScaffoldService`** — crea la estructura de carpetas/archivos de un tema nuevo bajo `layouts/{superficie}/{slug}`.
+- **`TemplateScaffoldService`** — crea la estructura de carpetas/archivos de un tema nuevo bajo `layouts/{slug}` (templates en la raíz y layouts/roles en `components/{superficie}/`).
 - **`TemplateExportService`** — funciona con `$version` (export a versión concreta) y `nextVersion()` (bump de patch 1.0.0 → 1.0.1); empaqueta ZIP y genera el registro `TemplateVersion`.
 
 ## Actions / Concerns

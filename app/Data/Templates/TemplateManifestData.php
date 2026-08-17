@@ -11,7 +11,7 @@ class TemplateManifestData extends Data
 {
     /**
      * @param  array<int, string>  $types
-     * @param  string  $home  home del tema relativo a layouts/ (ej: landing/templates/aurora)
+     * @param  string  $home  home del tema relativo a layouts/ (ej: aurora)
      * @param  array<string, array<string, string>>  $components  superficie => [rol => path]
      * @param  array<string, mixed>|null  $theme
      * @param  array<string, mixed>  $settings

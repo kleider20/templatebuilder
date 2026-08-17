@@ -13,7 +13,7 @@ resources/
 │   ├── components/             # Componentes React
 │   │   ├── ui/                 # Primitivas shadcn/Radix (26)
 │   │   ├── manifest-editor.tsx # Editor del manifiesto (modal JSON)
-│   │   ├── template-preview-surface.tsx  # Superficie de render de preview (multi-superficie)
+│   │   ├── template-preview-surface.tsx  # Superficie de render de preview (multi-superficie) — renderiza la fuente del tema vía import.meta.glob
 │   │   └── *.tsx               # Componentes de dominio/app (29 en total)
 │   ├── hooks/                  # Hooks (use-appearance, use-flash-toast, use-template-settings…)
 │   ├── layouts/                # Layouts (Wrappers/Templates + superficies default/)

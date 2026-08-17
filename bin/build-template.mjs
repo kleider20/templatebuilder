@@ -32,17 +32,9 @@ if (!slug) {
 
 // --- 1. Localizar el home del tema vía template.json (descubrimiento) ---
 function findManifest() {
-    const surfaces = ['landing', 'dashboard', 'forms', 'auth'];
+    const path = join(LAYOUTS, slug, 'template.json');
 
-    for (const surface of surfaces) {
-        const path = join(LAYOUTS, surface, 'templates', slug, 'template.json');
-
-        if (exists(path)) {
-            return { path, surface };
-        }
-    }
-
-    return null;
+    return exists(path) ? { path } : null;
 }
 
 function exists(p) {
@@ -61,10 +53,9 @@ if (!manifestInfo) {
 }
 
 const manifestPath = manifestInfo.path;
-const homeSurface = manifestInfo.surface;
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 
-const home = manifest.home || `${homeSurface}/templates/${slug}`;
+const home = manifest.home || slug;
 const homeDir = join(LAYOUTS, ...home.split('/'));
 const buildDir = join(ROOT, '.build');
 
@@ -156,6 +147,18 @@ function buildCssEntry(slugName, themeHome, m) {
     const roles = m.theme?.roles || ['primary', 'secondary', 'accent', 'background', 'surface', 'text'];
     const roleMap = roles.map((role) => `    --color-${role}: var(--tpl-${role});`).join('\n');
 
+    const semanticMap = [
+        '--color-content: var(--tpl-text);',
+        '--color-foreground: var(--tpl-text);',
+        '--color-card: var(--tpl-surface);',
+        '--color-input: var(--tpl-surface);',
+        '--color-muted: var(--tpl-surface);',
+        '--color-border: color-mix(in oklab, var(--tpl-text) 15%, transparent);',
+        '--color-muted-foreground: color-mix(in oklab, var(--tpl-text) 60%, transparent);',
+        '--color-primary-foreground: var(--tpl-background);',
+        '--color-ring: var(--tpl-primary);',
+    ].join('\n');
+
     const customCss = `${slugName}.css`;
     const customImport = exists(join(themeHome, customCss))
         ? `\n/* CSS custom del tema */\n@import ${JSON.stringify(customImportPath(themeHome, customCss))};\n`
@@ -167,6 +170,7 @@ function buildCssEntry(slugName, themeHome, m) {
 
 @theme inline {
 ${roleMap}
+${semanticMap}
 }
 ${customImport}
 `;

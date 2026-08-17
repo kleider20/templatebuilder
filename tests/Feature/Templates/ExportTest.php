@@ -42,7 +42,7 @@ function createExportTheme(string $slug = 'aurora'): string
  * Para tests de aislamiento usamos un stub del comando.
  */
 test('parity route sirve dist y assets desde el home', function () {
-    // Usamos el tema real generado en el repositorio (landing/templates/aurora).
+    // Usamos el tema real generado en el repositorio (aurora).
     $this->markTestSkipped('Requiere el tema aurora compilado en el repositorio.');
 });
 
@@ -106,8 +106,8 @@ test('zip verbatim contiene template.json y los tsx de cada superficie', functio
     }
 
     expect($zip->getFromName('template.json'))->toContain('"slug": "aurora"');
-    expect($zip->getFromName('landing/templates/aurora/dist/aurora.js'))->not->toBeFalse();
-    expect($zip->getFromName('landing/templates/aurora/dist/aurora.css'))->not->toBeFalse();
+    expect($zip->getFromName('aurora/dist/aurora.js'))->not->toBeFalse();
+    expect($zip->getFromName('aurora/dist/aurora.css'))->not->toBeFalse();
 
     $zip->close();
     File::delete($zipPath);

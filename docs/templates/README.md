@@ -24,13 +24,15 @@ docs/templates/
   - `dashboard` → `template`, `layout`, `sidebar`, `topmenu`
   - `forms` → `template`, `layout`, `header`, `footer`
   - `auth` → `template`, `layout`, `login`, `logout`
-- **Temas default**: viven en `resources/js/layouts/{superficie}/default/` (`welcome-layout`/`welcome-template` en landing, `dashboard-layout`/`dashboard-template`, `forms-layout`/`forms-template`, `auth-layout`/`auth-template` + `login`/`logout`). Son el fallback y la base de scaffolds; **no exportables**.
-- **Temas de usuario**: creados con `php artisan templates:make` (`TemplateMakeCommand`), scaffold vía `TemplateScaffoldService`, se guardan en `resources/js/layouts/{superficie}/{slug}/`.
+- **Temas default**: viven consolidados en `resources/js/layouts/default/` con el mismo naming que los temas (`landing-default-template.tsx`, `dashboard-default-template.tsx`, `forms-default-template.tsx`, `auth-default-template.tsx`; layouts/roles en `default/components/{superficie}/{tipo}-default-{rol}.tsx`). Son el fallback y la base de scaffolds; **no exportables**.
+- **Temas de usuario**: creados con `php artisan template:make` (`TemplateMakeCommand`), scaffold vía `TemplateScaffoldService`. Cada tema es una **carpeta hermana en `resources/js/layouts/{slug}/`** con su `template.json` en la raíz: templates `{tipo}-{slug}-template.tsx` en la raíz y layouts/roles en `components/{tipo}/{tipo}-{slug}-{rol}.tsx`.
 - **Manifiesto**: archivo JSON por tema validado por `TemplateManifestService`; editado desde el editor (`manifest-editor.tsx`) y vía `templates.manifest.update`.
-- **Preview**: `template-preview-surface.tsx` renderiza el tema en una superficie; carga el bundle `dist/{slug}.js` con URL absoluta de `window.location.origin` (funciona también en dev, donde el módulo corre desde el Vite dev server) e inyecta el `<link>` al CSS del tema (`manifest.exports.styles` → `dist/{slug}.css`), necesario para las utilidades y paletas del tema. Los ajustes se comparten con el hook `use-template-settings` y el evento `tpl:settings-changed`.
+- **Preview**: `template-preview-surface.tsx` renderiza el tema en una superficie **a partir del código fuente** (rutas de `manifest.components`) usando `import.meta.glob('/resources/js/layouts/**/*.tsx')` indexado por la ruta del rol; Vite los compila en dev y los agrupa en chunks en el build. No depende del bundle `dist/{slug}.js` ni del import map. Los componentes `lazy` se construyen **una sola vez a nivel de módulo** (por ruta): crearlos dentro del render (aunque fuera en un `useMemo`) cambia su identidad entre renders y, con React Compiler + StrictMode, el `Suspense` queda atascado en "Cargando superficie…" para siempre. Se mantiene el `<link>` al CSS del tema (`manifest.exports.styles` → `dist/{slug}.css`), necesario para las utilidades y paletas del tema (`bg-primary`, `bg-surface`, `text-content`, `--tpl-*`). Un `ErrorBoundary` envuelve al `Suspense` (un fallo de import muestra error en vez de quedar en "Cargando superficie…"). Los ajustes se comparten con el hook `use-template-settings` y el evento `tpl:settings-changed`.
+  - **Página full-screen**: `templates/preview` se renderiza **sin el chrome del builder** (`app.tsx` devuelve `null`). El template del tema ocupa toda la pantalla y los controles (pestañas de superficie landing/dashboard/forms/auth, apariencia, paletas, overrides y opciones del tema) viven en un **panel flotante** arriba-derecha con enlace "← Plantillas" y botón "Ocultar/Mostrar controles". El `SurfaceBadge` se ubica arriba-izquierda.
+  - **Composición por roles**: `DynamicTemplate` compone la superficie completa resolviendo todos los roles de `manifest.components[surface]` según el vocabulario de `config/templates.php` — `header`/`topmenu` arriba, `sidebar` al costado (dashboard), `template` como contenido principal (el `template` ya envuelve su `layout`) y `footer` abajo. En `auth` el `login` se renderiza como contenido del `template`. Cada pieza va envuelta en su propio `ErrorBoundary` para aislar fallos; si un rol falta se omite y si no hay `template`/`layout` se muestra `PreviewEmpty`. Un **badge flotante** (esquina superior) indica la superficie activa y un **placeholder sutil** dentro del `<main>` evita que el preview se vea vacío cuando el tema no aporta contenido.
 - **Thumbnail (preview)**: cada tema puede subir su imagen desde el catálogo (botón "Subir preview") vía `POST templates/{slug}/thumbnail`; se guarda como `{home}/thumbnails/preview.<ext>` y actualiza `thumbnail` en `template.json`. Si no existe archivo, el catálogo muestra `PlaceholderPattern`. Las URLs canónicas usan `templates/{slug}/thumbnails/{file}`.
 - **Export**: `TemplateExportService` genera ZIP + registro `TemplateVersion`; las URLs canónicas de artefactos usan paridad (`templates/{slug}/dist|assets|thumbnails`).
-- **Build**: `node bin/build-template.mjs {slug}` compila el tema a `dist/` (externaliza react/react-dom vía el bundle ESM `public/vendor/react/index.js` generado con `npm run build:vendor`).
+- **Build**: `node bin/build-template.mjs {slug}` compila el tema a `dist/` (externaliza react/react-dom vía el bundle ESM `public/vendor/react/index.js` generado con `npm run build:vendor`). El CSS entry (`buildCssEntry`) mapea los **roles** del tema y los **tokens semánticos shadcn** (`content`/`foreground`→`text`, `card`/`input`/`muted`→`surface`, `border`→`text` 15%, `muted-foreground`→`text` 60%, `primary-foreground`→`background`, `ring`→`primary`) a `--tpl-*`, de modo que `dist/{slug}.css` genera las utilidades que usan los componentes y queda **autocontenido**.
 - **Páginas frontend**: `resources/js/pages/templates/{index,create,editor,preview,versions}.tsx`.
 
 ## Terminología (sistema de layouts)
@@ -46,6 +48,7 @@ docs/templates/
 | `welcome` | (ninguno) | — |
 | `auth/*` | `AuthLayout` | `auth-simple-layout` |
 | `settings/*` | `AppLayout` + `SettingsLayout` | `app-sidebar-layout` + sub-nav |
+| `templates/preview` | (ninguno) | preview full-screen del tema |
 | `templates/*` (builder) | `AppLayout` (default) | `app-sidebar-layout` |
 | resto (dashboard, etc.) | `AppLayout` | `app-sidebar-layout` |
 
@@ -53,7 +56,7 @@ docs/templates/
 
 - Para cambiar la estructura global de las páginas autenticadas, editar `layouts/app/app-sidebar-layout.tsx` (o apuntar `app-layout.tsx` a otro template).
 - Para cambiar la estructura de auth, editar `layouts/auth/auth-simple-layout.tsx` (o apuntar `auth-layout.tsx` a `auth-card-layout`/`auth-split-layout`).
-- Los **temas default** por superficie (`layouts/{superficie}/default/`) se mantienen al día con `config/templates.php::defaults`.
+- Los **temas default** por superficie (`layouts/default/components/{superficie}/`) se mantienen al día con `config/templates.php::defaults`.
 - Todo archivo de `resources/js/` debe seguir **kebab-case**.
 - No crear nuevas carpetas base de layouts sin aprobación.
 

@@ -8,6 +8,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) + 
 
 ## [Sin publicar]
 
+### Preview de temas a pantalla completa + CSS del tema autocontenido (2026-08-16)
+- **El CSS del tema ahora es autocontenido**: `bin/build-template.mjs` → `buildCssEntry()` añade los **tokens semánticos shadcn** al `@theme inline` mapeados a los roles del tema (`content`/`foreground` → `text`, `card`/`input`/`muted` → `surface`, `border` → `text` al 15%, `muted-foreground` → `text` al 60%, `primary-foreground` → `background`, `ring` → `primary`). Esto genera utilidades que los componentes ya usaban (`text-content`, `border-border`, `bg-card`, `border-input`, `text-muted-foreground`) y que faltaban en `dist/{slug}.css`. `dist/aurora` regenerado.
+- **Preview del tema a pantalla completa**: `app.tsx` devuelve `null` para `templates/preview` (sin el chrome del builder); `preview.tsx` aplica el template del tema a toda la página con **pestañas flotantes** para cambiar de superficie (landing/dashboard/forms/auth), panel de controles colapsable (apariencia, paletas, overrides, opciones del tema), enlace "← Plantillas" y botón "Ocultar/Mostrar controles". El `SurfaceBadge` pasa a la izquierda y el mensaje vacío se ajusta a "No existe un template para la superficie «X» en este tema."
+- Nuevo test `tests/Feature/Templates/CssBuildTest.php` que verifica que el `dist/{slug}.css` mapea roles y tokens semánticos a `--tpl-*` y genera las utilidades (skip si el tema no está compilado).
+
+### Reestructuración tema-first de los temas (2026-08-16)
+- **Los temas ahora son carpetas hermanas en `resources/js/layouts/{slug}/`** (home = slug), ya no `{superficie}/templates/{slug}/`. Templates `{tipo}-{slug}-template.tsx` en la raíz y layouts/roles en `components/{tipo}/{tipo}-{slug}-{rol}.tsx`. `manifest.home` = slug.
+- **Temas default consolidados** en `resources/js/layouts/default/` con naming `{tipo}-default-{rol}` (`landing-default-template.tsx`, `auth-default-login.tsx`, etc.); se eliminan las carpetas `{superficie}/default/` y `{superficie}/templates/`.
+- `TemplateManifestService` (scan por `template.json` en dirs de base_path, validate `home === slug`), `TemplateScaffoldService` (home = slug, templates en raíz + `components/{tipo}/`), `TemplateExportService::zipVerbatim` (home completo + `template.json`), `ResolveTemplateFileAction`, `BuildEditorTreeAction` (recorre el home una vez) actualizados.
+- Editor: `groupTreeBySection`/`describeSection` agrupan por tipo vía `components/{tipo}`. `bin/build-template.mjs` descubre el manifest en `layouts/{slug}/template.json`.
+- `.gitignore` → `/resources/js/layouts/*/dist/`. Tests actualizados (ManifestTest/EditorTest/ExportTest). Suite 69 ok + 1 skip, tsc y lint en verde; `dist/aurora` regenerado.
+
+### Fix preview de temas: render del código fuente (2026-08-14)
+- **El preview ya no depende del bundle remoto `dist/{slug}.js`**: `template-preview-surface.tsx` renderiza la superficie desde el **código fuente** del tema. Resuelve la ruta del rol en `manifest.components` (p. ej. `landing/templates/aurora/aurora-template.tsx`) y la carga con `import.meta.glob('/resources/js/layouts/**/*.tsx')` indexado por `/resources/js/layouts/{path}`. Elimina la fragilidad del `import()` dinámico remoto (import map, MIME, bundle presente) que podía dejar la superficie en "Cargando superficie…" para siempre en dev.
+- **`ErrorBoundary` por encima del `Suspense`**: un fallo del import ahora muestra "No se pudo cargar el template" en vez de quedar colgado en el fallback o romper la app. Se conserva el `ErrorBoundaryHOC` interno para errores de render del tema.
+- Se mantiene el `<link>` al CSS del tema `dist/{slug}.css` (`manifest.exports.styles`) con cache-bust de dev, necesario para las utilidades/paletas (`bg-primary`, `--tpl-*`).
+- `preview.tsx` pasa `components={manifest.components}` a `PreviewSurface`. El import map y `build:vendor` quedan para la app y el consumo real/sandbox de temas.
+
 ### Arquitectura en espejo + RBAC + Seguridad (2026-08-06)
 - **Modularización** del dominio de Templates y Settings:
   - Controllers movidos a `app/Http/Controllers/Templates/` (namespace `App\Http\Controllers\Templates`); eliminados los controllers raíz obsoletos.

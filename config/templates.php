@@ -6,8 +6,9 @@ return [
     |--------------------------------------------------------------------------
     | Directorio base de authoring
     |--------------------------------------------------------------------------
-    | Carpeta raíz donde viven las superficies (landing, dashboard, forms, auth).
-    | Los paths de los manifiestos son relativos a este directorio.
+    | Carpeta raíz donde viven los temas (una carpeta por tema con su
+    | template.json) y la carpeta default/ de temas por defecto. Los paths de
+    | los manifiestos son relativos a este directorio.
     */
     'base_path' => 'resources/js/layouts',
 
@@ -29,17 +30,18 @@ return [
     |--------------------------------------------------------------------------
     | Temas default (internos, no exportables)
     |--------------------------------------------------------------------------
-    | Tema base por superficie bajo {superficie}/default/ (NO exportable, no
-    | aparece en el catálogo). Sirve de fallback y base de scaffolds.
-    | login/logout viven en auth/default/.
+    | Tema base por superficie bajo default/components/{superficie}/ (NO
+    | exportable, no aparece en el catálogo). Sirve de fallback y base de
+    | scaffolds. Sigue el mismo naming que los temas: {tipo}-default-{rol}.
+    | login/logout viven en default/components/auth/.
     */
     'defaults' => [
-        'landing' => 'landing/default/welcome-layout',
-        'dashboard' => 'dashboard/default/dashboard-layout',
-        'forms' => 'forms/default/forms-layout',
-        'auth' => 'auth/default/auth-layout',
-        'login' => 'auth/default/login',
-        'logout' => 'auth/default/logout',
+        'landing' => 'default/components/landing/landing-default-layout',
+        'dashboard' => 'default/components/dashboard/dashboard-default-layout',
+        'forms' => 'default/components/forms/forms-default-layout',
+        'auth' => 'default/components/auth/auth-default-layout',
+        'login' => 'default/components/auth/auth-default-login',
+        'logout' => 'default/components/auth/auth-default-logout',
     ],
 
     /*
