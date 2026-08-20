@@ -1,6 +1,7 @@
-import { Component, lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { Component, Suspense, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { themeComponent } from '@/lib/theme-loaders';
 import type { TemplateManifest } from '@/types';
 
 type PreviewSurfaceProps = {
@@ -13,45 +14,24 @@ type PreviewSurfaceProps = {
 /**
  * Renderiza en vivo el tema a partir de su código fuente (rutas de
  * `manifest.components`), sin depender del bundle `dist/{slug}.js` ni del
- * import map. `import.meta.glob` genera loaders lazy por archivo de layouts/,
- * así Vite los compila en dev y los agrupa en chunks en el build.
- *
- * Los componentes `lazy` se construyen UNA sola vez a nivel de módulo (por
- * ruta). Crearlos dentro del render (aunque fuera en un `useMemo`) hace que su
- * identidad cambie entre renders y, con React Compiler + StrictMode, el
- * `<Suspense>` queda atascado en el fallback "Cargando superficie…" para
- * siempre.
+ * import map. Los loaders lazy viven en `@/lib/theme-loaders` (nivel de
+ * módulo): `import.meta.glob` genera loaders por archivo de layouts/, así Vite
+ * los compila en dev y los agrupa en chunks en el build.
  */
-const themeLoaders = import.meta.glob('/resources/js/layouts/**/*.tsx');
-
-const themeComponents: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> =
-    Object.fromEntries(
-        Object.entries(themeLoaders).map(([key, loader]) => [
-            key,
-            lazy(() =>
-                loader().then((mod) => {
-                    const comp = (mod as { default?: React.ComponentType }).default;
-
-                    return {
-                        default: comp ?? (() => <PreviewEmpty surface={key} />),
-                    };
-                }),
-            ),
-        ]),
-    );
-
 export default function PreviewSurface({
     slug,
     surface,
     settings,
     components,
 }: PreviewSurfaceProps) {
+    const settingsStr = JSON.stringify(settings);
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
             window.__TPL_SETTINGS__ = settings;
             window.dispatchEvent(new Event('tpl:settings-changed'));
         }
-    }, [settings]);
+    }, [settingsStr]);
 
     return (
         <div className="relative min-h-full">
@@ -90,12 +70,12 @@ function DynamicTemplate({
     const sidebarRel = surfaceRoles.sidebar;
     const loginRel = surfaceRoles.login;
 
-    const TemplateRef = templateRel ? themeComponents[`/resources/js/layouts/${templateRel}`] : null;
-    const HeaderRef = headerRel ? themeComponents[`/resources/js/layouts/${headerRel}`] : null;
-    const FooterRef = footerRel ? themeComponents[`/resources/js/layouts/${footerRel}`] : null;
-    const TopmenuRef = topmenuRel ? themeComponents[`/resources/js/layouts/${topmenuRel}`] : null;
-    const SidebarRef = sidebarRel ? themeComponents[`/resources/js/layouts/${sidebarRel}`] : null;
-    const LoginRef = loginRel ? themeComponents[`/resources/js/layouts/${loginRel}`] : null;
+    const TemplateRef = themeComponent(templateRel);
+    const HeaderRef = themeComponent(headerRel);
+    const FooterRef = themeComponent(footerRel);
+    const TopmenuRef = themeComponent(topmenuRel);
+    const SidebarRef = themeComponent(sidebarRel);
+    const LoginRef = themeComponent(loginRel);
 
     const isAuth = surface === 'auth';
 

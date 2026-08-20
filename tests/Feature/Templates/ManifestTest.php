@@ -181,3 +181,57 @@ test('fixture del tema compilado valida OK en cada superficie', function () {
         expect(array_keys($dto->components[$type]))->toContain('template', 'layout');
     }
 });
+
+test('scaffold escribe pricing free por defecto', function () {
+    $home = makeTestTheme();
+    $manifest = json_decode(File::get(templateTestBase().'/'.$home.'/template.json'), true);
+
+    expect($manifest['pricing'])->toBe(['type' => 'free', 'price' => null, 'currency' => 'USD']);
+
+    $dto = app(TemplateManifestService::class)->loadBySlug('aurora');
+    expect($dto->pricing['type'])->toBe('free');
+    expect($dto->pricing['price'])->toBeNull();
+});
+
+test('pricing premium exige precio mayor a 0', function () {
+    $home = makeTestTheme(['landing']);
+    $manifestPath = templateTestBase().'/'.$home.'/template.json';
+    $manifest = json_decode(File::get($manifestPath), true);
+
+    $manifest['pricing'] = ['type' => 'premium', 'price' => null, 'currency' => 'USD'];
+    File::put($manifestPath, json_encode($manifest));
+
+    $service = app(TemplateManifestService::class);
+
+    expect(fn () => $service->loadBySlug('aurora'))
+        ->toThrow(RuntimeException::class, 'premium');
+});
+
+test('pricing con type inválido falla', function () {
+    $home = makeTestTheme(['landing']);
+    $manifestPath = templateTestBase().'/'.$home.'/template.json';
+    $manifest = json_decode(File::get($manifestPath), true);
+
+    $manifest['pricing'] = ['type' => 'gratis', 'price' => null];
+    File::put($manifestPath, json_encode($manifest));
+
+    $service = app(TemplateManifestService::class);
+
+    expect(fn () => $service->loadBySlug('aurora'))
+        ->toThrow(RuntimeException::class, "'free' o 'premium'");
+});
+
+test('pricing premium válido carga con precio normalizado', function () {
+    $home = makeTestTheme(['landing']);
+    $manifestPath = templateTestBase().'/'.$home.'/template.json';
+    $manifest = json_decode(File::get($manifestPath), true);
+
+    $manifest['pricing'] = ['type' => 'premium', 'price' => 49.9, 'currency' => 'usd'];
+    File::put($manifestPath, json_encode($manifest));
+
+    $dto = app(TemplateManifestService::class)->loadBySlug('aurora');
+
+    expect($dto->pricing['type'])->toBe('premium');
+    expect($dto->pricing['price'])->toBe(49.9);
+    expect($dto->pricing['currency'])->toBe('USD');
+});

@@ -28,6 +28,28 @@ Los **temas default** (no exportables) viven en `resources/js/layouts/default/` 
 patrón usando `{slug} = default` (`landing-default-template.tsx`,
 `default/components/landing/landing-default-layout.tsx`).
 
+## Componentes de tema (`resources/js/components/`)
+
+- **Temas por defecto** (internos, no eliminables) → `resources/js/components/default/{slug}/`.
+- **Temas comerciales / nuevos** → `resources/js/components/{slug}/`.
+- Si un tema no aporta componentes, se crea un `.gitkeep` en su carpeta para que exista
+  (`TemplateExportService` la incluye en el ZIP de export).
+- Los **roles de superficie** del builder (`LandingRole`, `DashboardRole`, etc.) se mantienen
+  en `layouts/{slug}/components/roles/`, **no** en `resources/js/components/`.
+- `default/` contiene solo un `.gitkeep` hasta que haya temas default con componentes.
+
+## Páginas por superficie
+
+Las páginas Inertia se organizan por **superficie/tipo** en `resources/js/pages/{superficie}/{pagina}/{pagina}.tsx` (el nombre Inertia es el path completo, p.ej. `landing/welcome/welcome`):
+
+- `landing/*` → páginas públicas (welcome). Envueltas por `LandingLayout` (template landing activo).
+- `forms/*` → formularios. Envueltas por `FormsLayout` (template forms activo).
+- `auth/*` → login/register/recovery. Sobre `AuthLayout`.
+- `dashboard/*` → páginas autenticadas. Sobre `AppLayout`.
+- `settings/*` y `templates/*` (builder) → carpetas fuera de las superficies (no reciben template del tema).
+
+Las páginas **no** definen layout de superficie: lo asigna el despachador de `app.tsx` por prefijo (`.ai/rules/pages.md`). Regla vigente para crear páginas nuevas.
+
 ## Exportaciones
 
 - **`ui/` components** → exportación **nombrada** (`export function Button`).

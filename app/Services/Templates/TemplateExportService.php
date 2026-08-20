@@ -180,9 +180,50 @@ class TemplateExportService
         // template.json al root del ZIP.
         $zip->addFile($this->manifests->homePath($manifest->home).'/template.json', 'template.json');
 
+        // Instalador + README comerciales (stubs renderizados con datos del manifiesto).
+        $zip->addFromString('install.php', $this->renderCommercialStub('install.php', $manifest));
+        $zip->addFromString('README.md', $this->renderCommercialStub('README.md', $manifest));
+
         $this->addDirectory($zip, $this->manifests->homePath($manifest->home), $manifest->home);
 
         $zip->close();
+    }
+
+    /**
+     * Renderiza un stub comercial (resources/stubs/commercial/) reemplazando los
+     * placeholders {{ key }} con los datos del manifiesto.
+     */
+    protected function renderCommercialStub(string $name, TemplateManifestData $manifest): string
+    {
+        $stub = resource_path('stubs/commercial/'.$name);
+
+        if (! is_file($stub)) {
+            throw new RuntimeException("Falta el stub comercial [{$name}].");
+        }
+
+        $types = implode(', ', $manifest->types);
+
+        $requires = collect($manifest->requires)
+            ->map(fn ($value, $key) => "- `{$key} {$value}`")
+            ->implode(PHP_EOL);
+
+        $price = (float) ($manifest->pricing['price'] ?? 0);
+        $pricing = $manifest->pricing['type'] === 'premium'
+            ? sprintf('$%s %s (Premium)', number_format($price, 2), strtoupper((string) ($manifest->pricing['currency'] ?? 'USD')))
+            : 'Gratis (FREE)';
+
+        $replacements = [
+            '{{ name }}' => $manifest->name,
+            '{{ slug }}' => $manifest->slug,
+            '{{ version }}' => $manifest->version,
+            '{{ author }}' => $manifest->author,
+            '{{ description }}' => $manifest->description,
+            '{{ types }}' => $types,
+            '{{ requires }}' => $requires,
+            '{{ pricing }}' => $pricing,
+        ];
+
+        return str_replace(array_keys($replacements), array_values($replacements), File::get($stub));
     }
 
     /**

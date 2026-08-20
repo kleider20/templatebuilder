@@ -23,6 +23,7 @@ export interface TemplateManifest {
         palettes: TemplatePalette[];
     } | null;
     settings: Record<string, TemplateSettingSchema>;
+    pricing: TemplatePricing;
     dependencies: Record<string, string>;
     requires: Record<string, string>;
     exports: {
@@ -43,6 +44,12 @@ export interface TemplateSettingSchema {
     label: string;
     default: string | boolean | number;
     options?: { value: string; label: string }[];
+}
+
+export interface TemplatePricing {
+    type: 'free' | 'premium';
+    price: number | null;
+    currency: string;
 }
 
 export interface TemplateTreeFile {
@@ -66,7 +73,23 @@ export interface TemplateCatalogItem {
         default: string;
         palettes: TemplatePalette[];
     } | null;
+    pricing: TemplatePricing;
 }
+
+export interface ThemeApplicationInfo {
+    slug: string;
+    name: string;
+    home: string;
+    components: Record<string, TemplateSurfaceComponents>;
+    exports: {
+        bundle: string;
+        styles: string;
+    };
+}
+
+export type ThemeApplications = Partial<
+    Record<'landing' | 'dashboard' | 'forms' | 'auth', ThemeApplicationInfo | null>
+>;
 
 export interface TemplateVersionRecord {
     id: number;

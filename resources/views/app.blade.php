@@ -35,15 +35,19 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         {{-- Import map: resuelve los bare specifiers de React que externalizan
-             los bundles de tema (dist/{slug}.js) hacia una instancia única ESM. --}}
+             los bundles de tema (dist/{slug}.js) hacia una instancia única ESM.
+             El query ?v= rompe la caché del navegador cuando se regenera el
+             bundle vendor (npm run build:vendor). --}}
+        @php($reactBundleVersion = (string) md5_file(public_path('vendor/react/index.js')))
         <script type="importmap">
         {
             "imports": {
-                "react": "/vendor/react/index.js",
-                "react/jsx-runtime": "/vendor/react/index.js",
-                "react/jsx-dev-runtime": "/vendor/react/index.js",
-                "react-dom": "/vendor/react/index.js",
-                "react-dom/client": "/vendor/react/index.js"
+                "react": "/vendor/react/index.js?v={{ $reactBundleVersion }}",
+                "react/jsx-runtime": "/vendor/react/index.js?v={{ $reactBundleVersion }}",
+                "react/jsx-dev-runtime": "/vendor/react/index.js?v={{ $reactBundleVersion }}",
+                "react-dom": "/vendor/react/index.js?v={{ $reactBundleVersion }}",
+                "react-dom/client": "/vendor/react/index.js?v={{ $reactBundleVersion }}",
+                "react/compiler-runtime": "/vendor/react/index.js?v={{ $reactBundleVersion }}"
             }
         }
         </script>

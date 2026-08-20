@@ -5,7 +5,7 @@ namespace App\Data\Templates;
 use Spatie\LaravelData\Data;
 
 /**
- * Ítem del catálogo de temas (página templates/index).
+ * Ítem del catálogo de temas (página dashboard/plantillas).
  */
 class TemplateSummaryData extends Data
 {
@@ -13,6 +13,7 @@ class TemplateSummaryData extends Data
      * @param  array<int, string>  $types
      * @param  array<string, mixed>  $settings
      * @param  array<string, mixed>|null  $theme
+     * @param  array<string, mixed>  $pricing  {type: free|premium, price, currency}
      */
     public function __construct(
         public string $name,
@@ -25,5 +26,6 @@ class TemplateSummaryData extends Data
         public string $home,
         public array $settings,
         public ?array $theme,
+        public array $pricing,
     ) {}
 }

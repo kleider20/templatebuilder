@@ -102,7 +102,7 @@ Documento con las especificaciones técnicas exactas del proyecto (versiones rea
 | Script | Comando | Descripción |
 |--------|---------|-------------|
 | Build | `npm run build` | Build de Vite |
-| Build vendor React | `npm run build:vendor` | Genera `public/vendor/react/index.js` (bundle ESM de react resuelto vía import map por la app y los bundles remotos de temas; el preview interno ya no depende de él) |
+| Build vendor React | `npm run build:vendor` | Genera `public/vendor/react/index.js` (bundle ESM de react resuelto vía import map por la app y los bundles remotos de temas; el preview interno ya no depende de él). Exporta además `c` (`react/compiler-runtime`, useMemoCache del React Compiler) como instancia única compartida. El import map en `app.blade.php` referencia la URL con `?v=<md5>` para romper la caché del navegador al regenerarlo |
 | Build template | `node bin/build-template.mjs {slug}` | Compila un tema del builder a `dist/` (JS ESM con react externa + CSS Tailwind v4 autocontenido: roles y tokens semánticos mapeados a `--tpl-*`) |
 | Dev | `npm run dev` / `composer run dev` | Vite + servidor + queue |
 | Lint | `npm run lint` / `composer run lint` | ESLint / Pint |
@@ -115,6 +115,6 @@ Documento con las especificaciones técnicas exactas del proyecto (versiones rea
 
 - **`components.json`** — config de shadcn/ui (alias `@/`).
 - **`tsconfig.json`** — strict, paths `@/*` → `resources/js/*`, `~/` → `vendor`.
-- **`vite.config.ts`** — plugins: `laravel`, `inertia`, `react` (con `babel-plugin-react-compiler`), `tailwindcss`, `wayfinder` (`formVariants: true`); fuente `Instrument Sans` vía Bunny.
+- **`vite.config.ts`** — plugins: `laravel`, `inertia`, `react` (con `babel-plugin-react-compiler`), `tailwindcss`, `wayfinder` (`formVariants: true`); fuente `Instrument Sans` vía Bunny. `build.rollupOptions.external` externaliza `react`, `react/jsx-runtime`, `react/jsx-dev-runtime`, `react-dom`, `react-dom/client` y `react/compiler-runtime` (deben coincidir con el import map de `app.blade.php`).
 - **`config/templates.php`** — dominio del builder: `base_path` (`resources/js/layouts`), `surfaces` (landing/dashboard/forms/auth), `defaults`, `theme_roles`, `min_palettes`, `fallback_palette`, `url_prefix`, `output_path`, `editor_extensions`.
 - **`.env`** — SQLite, sesiones en DB, cola en DB, cache en DB, mailer `log`.

@@ -118,6 +118,11 @@
             "default": true
         }
     },
+    "pricing": {
+        "type": "free",
+        "price": null,
+        "currency": "USD"
+    },
     "dependencies": [],
     "requires": {
         "php": ">=8.3",

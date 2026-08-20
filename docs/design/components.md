@@ -66,7 +66,7 @@ Exportaciones en su mayoría **default**, salvo wrappers multi-componente (`AppC
 - `delete-user.tsx` — Confirmación de borrado de cuenta.
 
 ### Template builder
-- `manifest-editor.tsx` — Editor del manifiesto (modal JSON, `settings`/`theme`), guarda vía `templates.manifest.update`.
+- `manifest-editor.tsx` — Editor del manifiesto (modal JSON, `settings`/`theme`/`pricing`), guarda vía `templates.manifest.update`. El bloque `pricing` usa un selector Gratis/Premium + input de precio (solo visible en Premium; valida `price > 0`).
 - `template-preview-surface.tsx` — Superficie de render del preview (multi-superficie), emite `tpl:settings-changed`. Renderiza el tema desde su **código fuente** vía `import.meta.glob` sobre `layouts/**/*.tsx` (indexado por `manifest.components`), sin depender del bundle `dist/{slug}.js` ni del import map. Los componentes `lazy` se construyen **una sola vez a nivel de módulo** (por ruta): crearlos dentro del render (aunque fuera en un `useMemo`) cambia su identidad entre renders y, con React Compiler + StrictMode, el `Suspense` queda atascado en "Cargando superficie…" para siempre. Un `ErrorBoundary` envuelve el `Suspense` para no quedarse en ese fallback si falla el import. Inyecta el `<link>` al CSS del tema `dist/{slug}.css` (`manifest.exports.styles`), del cual dependen las utilidades del tema (`bg-primary`, `bg-surface`, `text-content`, `border-border`, `--tpl-*`). El badge de superficie se ubica arriba-izquierda (el panel de controles del preview está arriba-derecha).
 
 ## Convenciones

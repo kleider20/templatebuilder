@@ -25,7 +25,6 @@ Archivo propio del dominio del builder. Las rutas de gestión se registran **ant
 
 | Método | URI | Handler | Nombre |
 |--------|-----|---------|--------|
-| GET | `/templates` | `TemplateController@index` | `templates.index` |
 | GET | `/templates/create` | `TemplateController@create` | `templates.create` |
 | POST | `/templates` | `TemplateController@store` | `templates.store` |
 | GET | `/templates/versions` | `TemplateExportController@index` | `templates.versions.index` |
@@ -38,7 +37,20 @@ Archivo propio del dominio del builder. Las rutas de gestión se registran **ant
 | POST | `/templates/{slug}/preview` | `TemplatePreviewController@data` | `templates.preview` |
 | POST | `/templates/{slug}/export` | `TemplateExportController@store` | `templates.export` |
 
+> El catálogo (`GET /templates`, `templates.index`) **se eliminó**: el catálogo vive en `dashboard.plantillas` (`GET /dashboard/plantillas`, `DashboardPlantillasController`, chrome del dashboard). `GET /templates` responde 405 (solo queda el `POST /` de `store`). Los fallbacks del editor redirigen a `dashboard.plantillas`.
+
 > `TemplateManifestEditorController` se fusionó dentro de `TemplateEditorController@updateManifest`.
+>
+> `GET /templates/{slug}/preview` aplica el middleware `NoStore` (responde `Cache-Control: no-store`) para que el navegador nunca sirva HTML viejo del preview con URLs de build.
+
+### Marketplace (público, sin auth, prefijo `templates`)
+
+| Método | URI | Handler | Nombre |
+|--------|-----|---------|--------|
+| GET | `/marketplace` | `TemplateMarketplaceController@index` | `marketplace` |
+| GET | `/marketplace/{slug}/download` | `TemplateMarketplaceController@download` | `marketplace.download` |
+
+> El marketplace es **público** (sin middleware `auth`): lista los temas default + registrados con su pricing y permite descargar el ZIP de export (404 si el tema no tiene `TemplateVersion`). `app.tsx` devuelve `null` como layout para `templates/marketplace`.
 
 ### Paridad de URLs (públicas, canónicas, idénticas a proyectos finales)
 
@@ -78,4 +90,6 @@ Cookies excluidas de cifrado: `appearance`, `sidebar_state`.
 
 ## Console
 
-`routes/console.php` solo define el comando stock `inspire`. Comandos personalizados (`app/Console/Commands`): `TemplateMakeCommand` (scaffold de un tema bajo `layouts/{slug}`).
+`routes/console.php` solo define el comando stock `inspire`. Comandos personalizados (`app/Console/Commands`):
+- `TemplateMakeCommand` (scaffold de un tema bajo `layouts/{slug}`).
+- `TemplateImportCommand` (`template:import {source} {--force} {--user=}` — instala un tema desde un ZIP de export o desde un slug ya extraído; opciones: `--force` sobrescribe el tema existente, `--user` registra la propiedad en `templates`).

@@ -24,6 +24,10 @@ class UpdateTemplateManifestRequest extends FormRequest
         return [
             'settings' => ['sometimes', 'array'],
             'theme' => ['sometimes', 'array'],
+            'pricing' => ['sometimes', 'array'],
+            'pricing.type' => ['required_with:pricing', 'string', 'in:free,premium'],
+            'pricing.price' => ['nullable', 'numeric', 'min:0.01'],
+            'pricing.currency' => ['nullable', 'string', 'size:3'],
         ];
     }
 }

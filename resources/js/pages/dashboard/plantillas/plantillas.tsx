@@ -1,5 +1,5 @@
 import { Form, Head, Link, router } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,10 +12,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { cn } from '@/lib/utils';
 import { create, editor, exportMethod } from '@/routes/templates';
 import { show } from '@/routes/templates/preview';
 import { update as updateThumbnail } from '@/routes/templates/thumbnail';
-import type { TemplateCatalogItem } from '@/types';
+import type { TemplateCatalogItem, TemplatePricing } from '@/types';
 
 const surfaceLabels: Record<string, string> = {
     landing: 'Landing',
@@ -24,12 +25,28 @@ const surfaceLabels: Record<string, string> = {
     auth: 'Auth',
 };
 
-type TemplatesPageProps = {
+type Filter = 'all' | 'free' | 'premium';
+
+type TypeTab = 'all' | string;
+
+type PlantillasPageProps = {
     templates: TemplateCatalogItem[];
     surfaces: string[];
     canCreate: boolean;
     canViewAll: boolean;
 };
+
+function PricingBadge({ pricing }: { pricing: TemplatePricing }) {
+    if (pricing.type === 'free') {
+        return (
+            <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">FREE</Badge>
+        );
+    }
+
+    const price = pricing.price != null ? `$${Number(pricing.price).toFixed(2)}` : 'Premium';
+
+    return <Badge variant="secondary">{price}</Badge>;
+}
 
 function ThumbnailUpload({ slug }: { slug: string }) {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -76,7 +93,19 @@ function ThumbnailUpload({ slug }: { slug: string }) {
     );
 }
 
-export default function Templates({ templates, canCreate }: TemplatesPageProps) {
+export default function Plantillas({ templates, surfaces, canCreate }: PlantillasPageProps) {
+    const [filter, setFilter] = useState<Filter>('all');
+    const [typeTab, setTypeTab] = useState<TypeTab>('all');
+
+    const typeTabs: TypeTab[] = ['all', ...surfaces];
+
+    const filtered = templates.filter((template) => {
+        const matchesType = typeTab === 'all' || template.types.includes(typeTab);
+        const type = template.pricing?.type ?? 'free';
+
+        return matchesType && (filter === 'all' || type === filter);
+    });
+
     return (
         <>
             <Head title="Plantillas" />
@@ -99,8 +128,43 @@ export default function Templates({ templates, canCreate }: TemplatesPageProps) 
                     )}
                 </div>
 
+                <div className="inline-flex flex-wrap gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+                    {typeTabs.map((value) => (
+                        <button
+                            key={value}
+                            type="button"
+                            onClick={() => setTypeTab(value)}
+                            className={cn(
+                                'flex items-center rounded-md px-3.5 py-1.5 text-sm transition-colors',
+                                typeTab === value
+                                    ? 'bg-white font-medium shadow-xs dark:bg-neutral-700 dark:text-neutral-100'
+                                    : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
+                            )}
+                        >
+                            {value === 'all' ? 'Todos' : (surfaceLabels[value] ?? value)}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                    {([
+                        ['all', 'Todos'],
+                        ['free', 'Gratis'],
+                        ['premium', 'Premium'],
+                    ] as [Filter, string][]).map(([value, label]) => (
+                        <Button
+                            key={value}
+                            size="sm"
+                            variant={filter === value ? 'default' : 'outline'}
+                            onClick={() => setFilter(value)}
+                        >
+                            {label}
+                        </Button>
+                    ))}
+                </div>
+
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                    {templates.map((template) => (
+                    {filtered.map((template) => (
                         <Card key={template.slug} className="overflow-hidden">
                             <div className="relative aspect-video overflow-hidden border-b border-border bg-muted">
                                 {template.thumbnail ? (
@@ -112,6 +176,9 @@ export default function Templates({ templates, canCreate }: TemplatesPageProps) 
                                 ) : (
                                     <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
                                 )}
+                                <div className="absolute right-2 top-2">
+                                    <PricingBadge pricing={template.pricing ?? { type: 'free', price: null, currency: 'USD' }} />
+                                </div>
                             </div>
 
                             <CardHeader>
@@ -159,16 +226,26 @@ export default function Templates({ templates, canCreate }: TemplatesPageProps) 
                         </Card>
                     ))}
                 </div>
+
+                {filtered.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                        No hay plantillas para este filtro.
+                    </p>
+                )}
             </div>
         </>
     );
 }
 
-Templates.layout = {
+Plantillas.layout = {
     breadcrumbs: [
         {
+            title: 'Dashboard',
+            href: '/dashboard',
+        },
+        {
             title: 'Plantillas',
-            href: '/templates',
+            href: '/dashboard/plantillas',
         },
     ],
 };

@@ -38,7 +38,7 @@ const layouts = {
 };
 ```
 
-Usa `name.startsWith('auth/')` y `name.startsWith('settings/')` como comodines; cualquier otra página cae en `AppLayout`. Las páginas del **template builder** (`templates/*`: `templates/index`, `templates/create`, `templates/editor`, `templates/preview`, `templates/versions`) caen en el `default` → `AppLayout`.
+Usa `name.startsWith('auth/')` y `name.startsWith('settings/')` como comodines; cualquier otra página cae en `AppLayout`. Las páginas del **template builder** (`templates/*`: `templates/create`, `templates/editor`, `templates/preview`, `templates/versions`, `templates/marketplace`) caen en el `default` → `AppLayout` (salvo `templates/preview` y `templates/marketplace`, sin layout). El catálogo ya no es `templates/index`: vive en `dashboard/plantillas` (ver mapa en [`../templates/README.md`](../templates/README.md)).
 
 ## Notas
 

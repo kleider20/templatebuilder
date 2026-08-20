@@ -3,6 +3,7 @@
 use App\Services\Templates\TemplateScaffoldService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Vite;
 
 beforeEach(function () {
     config(['templates.base_path' => 'storage/app/template-tests']);
@@ -52,6 +53,32 @@ test('preview con paleta inexistente devuelve 422', function () {
         ->assertUnprocessable();
 });
 
+test('preview show responde sin caché (Cache-Control: no-store)', function () {
+    endpointTheme();
+
+    $user = templateAdminUser();
+
+    $response = $this->actingAs($user)->get(route('templates.preview.show', 'aurora'));
+
+    $response->assertOk();
+    expect($response->headers->get('Cache-Control'))->toContain('no-store');
+});
+
+test('el import map del vendor React lleva cache-busting (?v=)', function () {
+    Vite::useHotFile(storage_path('app/vite-no-hot'));
+
+    try {
+        $hash = md5_file(public_path('vendor/react/index.js'));
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('vendor/react/index.js?v='.$hash, false)
+            ->assertSee('"react/compiler-runtime": "/vendor/react/index.js?v='.$hash.'"', false);
+    } finally {
+        Vite::useHotFile(public_path('hot'));
+    }
+});
+
 test('preview con paleta válida devuelve la selección', function () {
     endpointTheme();
 
@@ -95,6 +122,46 @@ test('subir thumbnail con archivo no imagen devuelve 422', function () {
     $this->actingAs($user)
         ->post(route('templates.thumbnail.update', 'aurora'), ['file' => $file])
         ->assertStatus(302);
+});
+
+test('manifest.update guarda pricing premium', function () {
+    endpointTheme();
+
+    $user = templateAdminUser();
+
+    $this->actingAs($user)
+        ->putJson(route('templates.manifest.update', 'aurora'), [
+            'pricing' => ['type' => 'premium', 'price' => 29.99, 'currency' => 'USD'],
+        ])
+        ->assertOk()
+        ->assertJsonPath('manifest.pricing.type', 'premium')
+        ->assertJsonPath('manifest.pricing.price', 29.99);
+
+    $manifest = json_decode(File::get(endpointTestBase().'/aurora/template.json'), true);
+    expect($manifest['pricing']['type'])->toBe('premium');
+});
+
+test('manifest.update rechaza premium sin precio', function () {
+    endpointTheme();
+
+    $user = templateAdminUser();
+
+    $this->actingAs($user)
+        ->putJson(route('templates.manifest.update', 'aurora'), [
+            'pricing' => ['type' => 'premium', 'price' => null],
+        ])
+        ->assertUnprocessable();
+});
+
+test('marketplace público lista los temas con pricing y descarga', function () {
+    endpointTheme();
+
+    $this->get(route('marketplace'))
+        ->assertOk()
+        ->assertSee('marketplace');
+
+    $this->get(route('marketplace.download', 'aurora'))
+        ->assertNotFound();
 });
 
 test('subir thumbnail guarda la imagen en thumbnails/ y actualiza template.json', function () {

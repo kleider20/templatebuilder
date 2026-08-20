@@ -1,23 +1,26 @@
 import type { ReactNode } from 'react';
+import { useState } from 'react';
+import DashboardDefaultSidebar from './dashboard-default-sidebar';
+import DashboardDefaultTopbar from './dashboard-default-topbar';
 
 interface DashboardDefaultLayoutProps {
     children: ReactNode;
 }
 
 export default function DashboardDefaultLayout({ children }: DashboardDefaultLayoutProps) {
+    const [mobileOpen, setMobileOpen] = useState(false);
+
     return (
-        <div className="tpl-root min-h-screen bg-background text-content">
-            <div className="flex">
-                <aside className="flex w-64 flex-col gap-2 border-r border-border bg-surface p-4">
-                    <span className="px-2 text-sm font-semibold text-primary">Dashboard</span>
-                    <a href="#" className="px-2 text-sm text-content transition-colors hover:text-primary">
-                        Inicio
-                    </a>
-                    <a href="#" className="px-2 text-sm text-content transition-colors hover:text-primary">
-                        Configuración
-                    </a>
-                </aside>
-                <main className="flex-1 p-6">{children}</main>
+        <div className="tpl-root min-h-screen bg-background text-foreground">
+            <div className="flex min-h-screen">
+                <DashboardDefaultSidebar
+                    mobileOpen={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                />
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <DashboardDefaultTopbar onMenuClick={() => setMobileOpen((open) => !open)} />
+                    <main className="flex-1 p-6">{children}</main>
+                </div>
             </div>
         </div>
     );

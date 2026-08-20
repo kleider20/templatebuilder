@@ -219,6 +219,11 @@ class TemplateManifestService
             $this->validateTheme($manifest['theme']);
         }
 
+        // Validación del bloque pricing (opcional por compatibilidad).
+        if (isset($manifest['pricing'])) {
+            $this->validatePricing($manifest['pricing']);
+        }
+
         return TemplateManifestData::fromManifest($manifest, $this->vocabulary());
     }
 
@@ -276,6 +281,30 @@ class TemplateManifestService
 
         if (! is_string($default) || ! isset($ids[$default])) {
             throw new RuntimeException('theme.default debe referenciar una paleta existente.');
+        }
+    }
+
+    /**
+     * Valida el bloque pricing (free|premium; premium exige price > 0).
+     *
+     * @param  array<string, mixed>  $pricing
+     *
+     * @throws RuntimeException
+     */
+    protected function validatePricing(array $pricing): void
+    {
+        $type = $pricing['type'] ?? null;
+
+        if ($type !== 'free' && $type !== 'premium') {
+            throw new RuntimeException("pricing.type debe ser 'free' o 'premium'.");
+        }
+
+        if ($type === 'premium') {
+            $price = $pricing['price'] ?? null;
+
+            if (! is_numeric($price) || (float) $price <= 0) {
+                throw new RuntimeException('pricing.precio debe ser un número mayor a 0 cuando el tema es premium.');
+            }
         }
     }
 

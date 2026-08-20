@@ -14,15 +14,16 @@ class UpdateManifestAction
     ) {}
 
     /**
-     * Reescribe settings/theme del template.json validando sobre una copia.
+     * Reescribe settings/theme/pricing del template.json validando sobre una copia.
      *
      * @param  array<string, mixed>|null  $settings
      * @param  array<string, mixed>|null  $theme
+     * @param  array<string, mixed>|null  $pricing
      * @return array<string, mixed>
      *
      * @throws RuntimeException
      */
-    public function handle(TemplateManifestData $manifest, ?array $settings = null, ?array $theme = null): array
+    public function handle(TemplateManifestData $manifest, ?array $settings = null, ?array $theme = null, ?array $pricing = null): array
     {
         $current = $manifest->toManifestArray();
 
@@ -34,6 +35,10 @@ class UpdateManifestAction
 
         if ($theme !== null) {
             $next['theme'] = $theme;
+        }
+
+        if ($pricing !== null) {
+            $next['pricing'] = $pricing;
         }
 
         $this->manifests->validate($next);

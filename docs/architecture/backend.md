@@ -19,9 +19,10 @@ app/
 │   │   ├── ResolveTemplateFileAction.php# resolución segura de rutas (anti path traversal)
 │   │   ├── ReadTemplateFileAction.php    # lee archivo del tema
 │   │   ├── SaveTemplateFileAction.php    # guarda archivo validado en allowlist
-│   │   ├── UpdateManifestAction.php      # actualiza settings/theme del manifiesto
+│   │   ├── UpdateManifestAction.php      # actualiza settings/theme/pricing del manifiesto
 │   │   ├── UploadThumbnailAction.php     # sube preview → {home}/thumbnails/...
-│   │   └── ExportTemplateAction.php      # export con bump de versión + TemplateVersion
+│   │   ├── ExportTemplateAction.php      # export con bump de versión + TemplateVersion
+│   │   └── MarketplaceTemplatesAction.php# listado público del marketplace (default + registrados)
 │   └── Settings/
 │       ├── UpdateProfileAction.php    # PATCH de perfil
 │       ├── DeleteProfileAction.php    # borra cuenta (inborrables: is_undeletable)
@@ -32,6 +33,7 @@ app/
 ├── Console/
 │   └── Commands/
 │       ├── TemplateMakeCommand.php    # Scaffold de un tema bajo layouts/{slug}
+│       ├── TemplateImportCommand.php  # `template:import {source}` — instala un tema (ZIP o slug)
 │       └── UserPromoteCommand.php     # `user:promote` — asigna rol super_admin
 ├── Data/
 │   ├── Templates/
@@ -53,6 +55,7 @@ app/
 │   │   │   ├── TemplateEditorController.php  # show/update + updateManifest + uploadThumbnail
 │   │   │   ├── TemplateExportController.php  # index/store/download versions
 │   │   │   ├── TemplatePreviewController.php  # show + data (paleta validada)
+│   │   │   ├── TemplateMarketplaceController.php # marketplace público (sin auth) + download
 │   │   │   └── TemplateViewController.php # paridad: show + asset
 │   │   └── Settings/
 │   │       ├── ProfileController.php  # edit / update / destroy
@@ -86,7 +89,8 @@ app/
 │   └── Templates/
 │       ├── TemplateManifestService.php  # parse/valida manifiestos → TemplateManifestData
 │       ├── TemplateScaffoldService.php  # crea estructura de carpetas de un tema
-│       └── TemplateExportService.php    # export(ZIP, $version) + nextVersion() + TemplateVersion
+│       ├── TemplateExportService.php    # export(ZIP, $version) + nextVersion() + TemplateVersion
+│       └── TemplateImportService.php    # importa ZIP/slug → layouts/{slug} + registra + rebuild
 └── Providers/
     ├── AppServiceProvider.php    # Gate::policy(Template) + Gate::before (super_admin)
     └── FortifyServiceProvider.php
@@ -141,14 +145,16 @@ app/
 - **`Templates\TemplateController`** → `index` (catálogo vía `CatalogTemplatesAction`, expone `canCreate`/`canViewAll`), `create`, `store` (→ `CreateTemplateAction`).
 - **`Templates\TemplateEditorController`** → `show` (árbol + active file vía `BuildEditorTreeAction`/`ReadTemplateFileAction`), `update` (→ `SaveTemplateFileAction`), `updateManifest` (→ `UpdateManifestAction`), `uploadThumbnail` (→ `UploadThumbnailAction`).
 - **`Templates\TemplateExportController`** → `index` (listado de versiones), `store` (→ `ExportTemplateAction` con `nextVersion()`), `download`.
-- **`Templates\TemplatePreviewController`** → `show` (render preview), `data` (valida `palette` con `Rule::in` sobre las paletas del tema).
+- **`Templates\TemplateMarketplaceController`** → `index` (marketplace público sin auth → `MarketplaceTemplatesAction`, expone default + registrados con pricing), `download` (ZIP de export de un tema; 404 si no tiene `TemplateVersion`).
+- **`Templates\TemplatePreviewController`** → `show` (render preview, responde con `Cache-Control: no-store` vía el middleware `NoStore` para evitar que el navegador sirva HTML viejo del preview), `data` (valida `palette` con `Rule::in` sobre las paletas del tema).
 - **`Templates\TemplateViewController`** → `show` (paridad `{slug}/{dir}/{file}`), `asset` (paridad `assets/{path}`). Sirve artefactos compilados.
 
 ## Services (`app/Services/Templates`)
 
-- **`TemplateManifestService`** — parsea y valida los manifiestos de tema; resuelve rutas seguras (evita path traversal y devuelve `TemplateManifestData`).
-- **`TemplateScaffoldService`** — crea la estructura de carpetas/archivos de un tema nuevo bajo `layouts/{slug}` (templates en la raíz y layouts/roles en `components/{superficie}/`).
-- **`TemplateExportService`** — funciona con `$version` (export a versión concreta) y `nextVersion()` (bump de patch 1.0.0 → 1.0.1); empaqueta ZIP y genera el registro `TemplateVersion`.
+- **`TemplateManifestService`** — parsea y valida los manifiestos de tema; resuelve rutas seguras (evita path traversal y devuelve `TemplateManifestData`). Valida el bloque `pricing` (`type` free/premium; `premium` exige `price > 0`; `currency` por defecto `USD`).
+- **`TemplateScaffoldService`** — crea la estructura de carpetas/archivos de un tema nuevo bajo `layouts/{slug}` (templates en la raíz y layouts/roles en `components/{superficie}/`). Genera `pricing: {type: free}` por defecto.
+- **`TemplateExportService`** — funciona con `$version` (export a versión concreta) y `nextVersion()` (bump de patch 1.0.0 → 1.0.1); empaqueta ZIP y genera el registro `TemplateVersion`. Incluye en el ZIP `template.json`, la carpeta del tema con `dist/` y los stubs comerciales renderizados (`install.php` + `README.md` desde `resources/stubs/commercial/`).
+- **`TemplateImportService`** — `importFromZip($zip, $force, $userId)` extrae en `storage/app/template-imports`, valida el manifiesto contra una base temporal y copia al home real (lanzar `RuntimeException` si el tema ya existe sin `--force`); `importFromSlug($slug, $userId)` valida el tema ya extraído. `install()` registra la propiedad en `templates` **solo si** `$userId !== null` (columna NOT NULL) y `ensureBuilt()` recompila `dist/` con `node bin/build-template.mjs {slug}` si el ZIP no trae artefactos.
 
 ## Actions / Concerns
 
@@ -234,4 +240,4 @@ Migraciones en `database/migrations`:
 - `tests/Feature/Auth/` — authentication, email verification, password confirmation/reset, registration, two-factor challenge, verification notification.
 - `tests/Feature/` — DashboardTest, ExampleTest.
 - `tests/Feature/Settings/` — ProfileUpdateTest, SecurityTest.
-- `tests/Feature/Templates/` — `EditorTest`, `EndpointsTest` (401/403/422), `ExportTest`, `ManifestTest`, `ParityTest` (template builder).
+- `tests/Feature/Templates/` — `EditorTest`, `EndpointsTest` (401/403/422), `ExportTest`, `ManifestTest`, `ImportTest`, `ParityTest` (template builder).

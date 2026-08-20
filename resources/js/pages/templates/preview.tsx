@@ -190,6 +190,7 @@ export default function Preview({ slug, manifest, surfaces }: PreviewProps) {
                         </div>
 
                         <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => setPanelOpen((v) => !v)}

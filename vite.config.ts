@@ -34,7 +34,14 @@ export default defineConfig({
     // hook call" en el preview de temas).
     build: {
         rollupOptions: {
-            external: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom', 'react-dom/client'],
+            external: [
+                'react',
+                'react/jsx-runtime',
+                'react/jsx-dev-runtime',
+                'react-dom',
+                'react-dom/client',
+                'react/compiler-runtime',
+            ],
         },
     },
 });

@@ -16,9 +16,9 @@ resources/
 │   │   ├── template-preview-surface.tsx  # Superficie de render de preview (multi-superficie) — renderiza la fuente del tema vía import.meta.glob
 │   │   └── *.tsx               # Componentes de dominio/app (29 en total)
 │   ├── hooks/                  # Hooks (use-appearance, use-flash-toast, use-template-settings…)
-│   ├── layouts/                # Layouts (Wrappers/Templates + superficies default/)
+│   ├── layouts/                # Layouts (Wrappers/Templates + superficies default/ + surfaces/)
 │   ├── lib/utils.ts            # cn(), toUrl()
-│   ├── pages/                  # Páginas por ruta Inertia (19)
+│   ├── pages/                  # Páginas por superficie: {superficie}/{pagina}/{pagina}.tsx
 │   ├── routes/                 # Named-routes generados por Wayfinder
 │   ├── types/                  # Tipos TS (auth, navigation, ui, global)
 │   └── wayfinder/              # Runtime helpers de Wayfinder
@@ -28,25 +28,29 @@ resources/
 ## Entrada de la aplicación (`app.tsx`)
 
 - `createInertiaApp` con template de título `"{title} - {appName}"`.
-- **Despachador de layout** por nombre de página:
-  - `welcome` → Layout `null` (sin layout).
+- **Despachador de layout por superficie** (nombre de página):
+  - `landing/*` → `LandingLayout` (`layouts/surfaces/landing-layout.tsx`) — aplica el template **landing** activo (por ahora el tema `default`) a **todas** las páginas públicas.
+  - `forms/*` → `FormsLayout` (`layouts/surfaces/forms-layout.tsx`) — aplica el template **forms** activo (tema `default`).
+  - `templates/preview` y `templates/marketplace` → Layout `null`.
   - `auth/*` → `AuthLayout`.
   - `settings/*` → `[AppLayout, SettingsLayout]`.
-  - resto → `AppLayout`.
+  - `dashboard/*` → `DashboardLayout` (`layouts/surfaces/dashboard-layout.tsx`) — aplica el template **dashboard** del tema default (sidebar + topbar con rutas reales) a las páginas autenticadas del dashboard. `templates/*` y el resto caen en `AppLayout`.
 - `strictMode: true`; `withApp` envuelve en `TooltipProvider` + `<Toaster>`.
 - `progress.color: '#4B5563'`.
 - Llama `initializeTheme()` al cargar (gestión de tema claro/oscuro).
 
 ## Páginas (`pages/`)
 
-19 páginas bajo los espacios `auth/`, `settings/`, `templates/` y raíz:
+19 páginas organizadas por **superficie** con la estructura `{superficie}/{pagina}/{pagina}.tsx` (el nombre Inertia es el path completo, p.ej. `landing/welcome/welcome`):
 
-- **Raíz:** `welcome.tsx` (landing, sin layout), `dashboard.tsx` (placeholders + breadcrumbs).
-- **auth/** (`login`, `register`, `forgot-password`, `reset-password`, `confirm-password`, `verify-email`, `two-factor-challenge`) — formularios Fortify sobre `AuthLayout`.
+- **landing/** (públicas, sin login): `welcome/welcome.tsx` — envueltas por el template landing activo (`LandingLayout`); el contenido no incluye chrome propio (header/footer/nav los provee el tema).
+- **dashboard/** (autenticadas): `dashboard/dashboard.tsx` (placeholders + breadcrumbs) y `dashboard/plantillas/plantillas.tsx` (**catálogo canónico de plantillas**, ex `templates/index`) sobre `DashboardLayout`. Muestra los temas con **tabs por tipo** (Todos/Landing/Dashboard/Auth/Forms, construidos desde la prop `surfaces`; un tema multi-tipo aparece en cada tab que le corresponda) + filtro de precios (Todos/Gratis/Premium), que se combinan. Incluye por tarjeta los botones **Editor / Preview / Exportar / Subir preview** (este último sube la imagen vía `templates.thumbnail.update` con `FormData` y recarga la lista).
+- **forms/**: formularios envueltos por `FormsLayout`.
+- **auth/**: `login/login.tsx`, `register/register.tsx`, `forgot-password/forgot-password.tsx`, `reset-password/reset-password.tsx`, `confirm-password/confirm-password.tsx`, `verify-email/verify-email.tsx`, `two-factor-challenge/two-factor-challenge.tsx` — formularios Fortify sobre `AuthLayout`.
 - **settings/** (`profile`, `security`, `appearance`) — sobre `[AppLayout, SettingsLayout]`.
-- **templates/** (`index`, `create`, `editor`, `preview`, `versions`) — template builder sobre `AppLayout` (caen en el `default` del despachador). El catálogo (`index`) incluye por tarjeta los botones **Editor / Preview / Exportar / Subir preview** (este último sube la imagen vía `templates.thumbnail.update` con `FormData` y recarga la lista).
+- **templates/** (`create`, `editor`, `preview`, `versions`, `marketplace`) — template builder sobre `AppLayout` (caen en el `default` del despachador). La antigua página `templates/index` (catálogo) se **eliminó**: el catálogo vive ahora en `dashboard/plantillas/plantillas`. `templates/preview` y `templates/marketplace` no llevan layout (full-screen / público).
 
-Cada página expone `.layout = { title, description }` (auth) o `.layout = { breadcrumbs }` (dashboard/settings/templates).
+Cada página expone `.layout = { title, description }` (auth) o `.layout = { breadcrumbs }` (dashboard/settings/templates). Las páginas **no** definen layout de superficie: lo asigna el despachador (ver `.ai/rules/pages.md`).
 
 ## Hooks
 
@@ -72,7 +76,7 @@ Cada página expone `.layout = { title, description }` (auth) o `.layout = { bre
 ## Wayfinder (llamadas tipadas)
 
 - `actions/` — funciones por controller PHP (PascalCase), métodos `.url()`, `.get()`, `.post()`, `.form()`. Incluye `templates` (`index`, `create`, `store`, `editor`, `preview`, `export`…).
-- `routes/` — named-routes en kebab-case (módulos: login, logout, register, home, dashboard, security, profile, two-factor, settings, templates, etc.). El módulo `templates/preview` expone `show` para el GET de preview.
+- `routes/` — named-routes en kebab-case (módulos: login, logout, register, home, dashboard, security, profile, two-factor, settings, templates, etc.). El módulo `dashboard` expone `index` y `plantillas`; el módulo `templates` ya **no** expone `index` (el catálogo es `dashboard.plantillas`); el módulo `templates/preview` expone `show` para el GET de preview.
 - `wayfinder/index.ts` — helpers `queryParams`, `setUrlDefaults`, `addUrlDefault`, etc.
 - Configurado en `vite.config.ts` con `formVariants: true`.
 - **Nota**: el helper de export del tema se llama `exportMethod` (no `export`, palabra reservada) — ver `.ai/rules/templates.md`.

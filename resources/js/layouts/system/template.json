@@ -1,0 +1,48 @@
+{
+  "name": "SystemBuilder",
+  "slug": "systembuilder",
+  "type": ["dashboard"],
+  "version": "1.0.0",
+  "author": "System",
+  "description": "Tema multi-superficie.",
+  "thumbnail": "thumbnails/preview.png",
+  "home": "system",
+  "components": {
+    "dashboard": {
+      "template": "system/dashboard-system-template.tsx",
+      "layout": "system/components/dashboard/dashboard-system-layout.tsx",
+      "sidebar": "system/components/dashboard/dashboard-system-sidebar.tsx",
+      "topmenu": "system/components/dashboard/dashboard-system-topmenu.tsx"
+    }
+
+  },
+  "theme": {
+    "roles": ["primary", "secondary", "accent", "background", "surface", "text"],
+    "default": "indigo",
+    "palettes": [
+      {
+        "id": "indigo", "label": "Índigo",
+        "colors": { "primary": "#4f46e5", "secondary": "#818cf8", "accent": "#22d3ee", "background": "#ffffff", "surface": "#f4f4f5", "text": "#18181b" },
+        "dark": { "primary": "#6366f1", "background": "#09090b", "surface": "#18181b", "text": "#f4f4f5" }
+      },
+      {
+        "id": "emerald", "label": "Esmeralda",
+        "colors": { "primary": "#059669", "secondary": "#34d399", "accent": "#f59e0b", "background": "#ffffff", "surface": "#f4f4f5", "text": "#18181b" },
+        "dark": { "primary": "#10b981", "background": "#09090b", "surface": "#18181b", "text": "#f4f4f5" }
+      },
+      {
+        "id": "rose", "label": "Rosa",
+        "colors": { "primary": "#e11d48", "secondary": "#fb7185", "accent": "#8b5cf6", "background": "#ffffff", "surface": "#f4f4f5", "text": "#18181b" },
+        "dark": { "primary": "#f43f5e", "background": "#09090b", "surface": "#18181b", "text": "#f4f4f5" }
+      }
+    ]
+  },
+  "settings": {
+    "hero_title": { "type": "text", "label": "Título del hero", "default": "Bienvenido" },
+    "show_topmenu": { "type": "bool", "label": "Mostrar top menu", "default": true }
+  },
+  "pricing": { "type": "free", "price": null, "currency": "USD" },
+  "dependencies": [],
+  "requires": { "php": ">=8.3", "laravel": ">=13", "react": ">=19", "tailwind": ">=4" },
+  "exports": { "bundle": "dist/aurora.js", "styles": "dist/aurora.css" }
+}

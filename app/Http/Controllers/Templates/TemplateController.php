@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Templates;
 
-use App\Actions\Templates\CatalogTemplatesAction;
 use App\Actions\Templates\CreateTemplateAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Templates\StoreTemplateRequest;
@@ -17,26 +16,8 @@ class TemplateController extends Controller
 {
     public function __construct(
         protected TemplateManifestService $manifests,
-        protected CatalogTemplatesAction $catalog,
         protected CreateTemplateAction $create,
     ) {}
-
-    /**
-     * Catálogo de temas (scoped por propietario o "view_all_templates").
-     */
-    public function index(): Response
-    {
-        $this->authorize('viewAny', Template::class);
-
-        $data = $this->catalog->handle(request()->user());
-
-        return Inertia::render('templates/index', [
-            'templates' => $data['items'],
-            'surfaces' => $data['surfaces'],
-            'canCreate' => $data['canCreate'],
-            'canViewAll' => $data['canViewAll'],
-        ]);
-    }
 
     /**
      * Formulario de creación de un tema nuevo.

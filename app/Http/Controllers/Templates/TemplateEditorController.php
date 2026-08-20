@@ -39,13 +39,13 @@ class TemplateEditorController extends Controller
         try {
             $this->authorize('view', $this->templateFor($slug));
         } catch (\Throwable $e) {
-            return to_route('templates.index');
+            return to_route('dashboard.plantillas');
         }
 
         try {
             $manifest = $this->manifests->loadBySlug($slug);
         } catch (RuntimeException) {
-            return to_route('templates.index');
+            return to_route('dashboard.plantillas');
         }
 
         $tree = $this->tree->handle($manifest);
@@ -118,7 +118,12 @@ class TemplateEditorController extends Controller
         $validated = $request->validated();
 
         try {
-            $next = $this->manifestAction->handle($manifest, $validated['settings'] ?? null, $validated['theme'] ?? null);
+            $next = $this->manifestAction->handle(
+                $manifest,
+                $validated['settings'] ?? null,
+                $validated['theme'] ?? null,
+                $validated['pricing'] ?? null,
+            );
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

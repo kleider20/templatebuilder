@@ -224,6 +224,11 @@ class TemplateScaffoldService
                 'hero_title' => ['type' => 'text', 'label' => 'Título del hero', 'default' => 'Bienvenido'],
                 'show_topmenu' => ['type' => 'bool', 'label' => 'Mostrar top menu', 'default' => true],
             ],
+            'pricing' => [
+                'type' => 'free',
+                'price' => null,
+                'currency' => 'USD',
+            ],
             'dependencies' => [],
             'requires' => [
                 'php' => '>=8.3',

@@ -112,3 +112,34 @@ test('zip verbatim contiene template.json y los tsx de cada superficie', functio
     $zip->close();
     File::delete($zipPath);
 });
+
+test('zip incluye install.php y README renderizados con datos del tema', function () {
+    $home = createExportTheme('aurora');
+    $distDir = exportTestBase().'/'.$home.'/dist';
+    File::makeDirectory($distDir, 0755, true);
+    File::put($distDir.'/aurora.js', 'import{jsx}from"react/jsx-runtime";export const components={landing:{},dashboard:{}};');
+    File::put($distDir.'/aurora.css', '--color-primary: var(--tpl-primary);.dark{}');
+
+    Process::fake();
+
+    app(TemplateExportService::class)->export('aurora');
+
+    $zipPath = base_path('output/aurora-1.0.0.zip');
+
+    $zip = new ZipArchive;
+    expect($zip->open($zipPath))->toBeTrue();
+
+    $install = $zip->getFromName('install.php');
+    $readme = $zip->getFromName('README.md');
+
+    expect($install)->not->toBeFalse();
+    expect($install)->toContain('$theme = \'aurora\';');
+    expect($install)->toContain('template:import');
+
+    expect($readme)->not->toBeFalse();
+    expect($readme)->toContain('Aurora');
+    expect($readme)->toContain('Gratis');
+
+    $zip->close();
+    File::delete($zipPath);
+});

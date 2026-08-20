@@ -24,8 +24,13 @@ import type {
  * contrato). Las paletas manipulan directamente el modelo del manifiesto.
  */
 export default function ManifestEditor({ manifest, slug }: { manifest: TemplateManifest; slug: string }) {
+    const initialPricing = manifest.pricing ?? { type: 'free', price: null, currency: 'USD' };
     const [settingsText, setSettingsText] = useState(() => JSON.stringify(manifest.settings ?? {}, null, 2));
     const [themeText, setThemeText] = useState(() => JSON.stringify(manifest.theme ?? {}, null, 2));
+    const [pricingType, setPricingType] = useState<'free' | 'premium'>(initialPricing.type);
+    const [pricingPrice, setPricingPrice] = useState<string>(
+        initialPricing.price != null ? String(initialPricing.price) : '',
+    );
     const [saving, setSaving] = useState(false);
 
     const parsed = useMemo(() => {
@@ -55,6 +60,14 @@ export default function ManifestEditor({ manifest, slug }: { manifest: TemplateM
             return;
         }
 
+        const price = pricingType === 'premium' ? Number(pricingPrice) : null;
+
+        if (pricingType === 'premium' && (price == null || Number.isNaN(price) || price <= 0)) {
+            toast.error('Indica un precio válido mayor a 0 para el tema premium.');
+
+            return;
+        }
+
         setSaving(true);
 
         router.put(
@@ -62,6 +75,11 @@ export default function ManifestEditor({ manifest, slug }: { manifest: TemplateM
             {
                 settings: parsed.settings ?? manifest.settings,
                 theme: parsed.theme ?? manifest.theme,
+                pricing: {
+                    type: pricingType,
+                    price,
+                    currency: 'USD',
+                },
             } as unknown as Record<string, string>,
             {
                 preserveScroll: true,
@@ -94,6 +112,46 @@ export default function ManifestEditor({ manifest, slug }: { manifest: TemplateM
                 </DialogHeader>
 
                 <div className="grid gap-4">
+                    <div className="grid gap-1.5">
+                        <Label>Precio</Label>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant={pricingType === 'free' ? 'default' : 'outline'}
+                                onClick={() => setPricingType('free')}
+                            >
+                                Gratis
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant={pricingType === 'premium' ? 'default' : 'outline'}
+                                onClick={() => setPricingType('premium')}
+                            >
+                                Premium
+                            </Button>
+                            {pricingType === 'premium' && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-sm text-muted-foreground">USD</span>
+                                    <input
+                                        type="number"
+                                        min="0.01"
+                                        step="0.01"
+                                        value={pricingPrice}
+                                        onChange={(e) => setPricingPrice(e.target.value)}
+                                        placeholder="0.00"
+                                        aria-label="Precio en USD"
+                                        className="w-28 rounded-md border border-border bg-background p-2 text-sm text-foreground"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Gratis muestra «FREE»; Premium muestra el precio en el catálogo.
+                        </p>
+                    </div>
+
                     <div className="grid gap-1.5">
                         <Label>settings</Label>
                         <textarea

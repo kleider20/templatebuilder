@@ -46,6 +46,7 @@ class CatalogTemplatesAction
                 'home' => $manifest->home,
                 'settings' => $manifest->settings,
                 'theme' => $manifest->theme,
+                'pricing' => $manifest->pricing,
             ])->toArray())
             ->values()
             ->all();
